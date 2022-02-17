@@ -22,7 +22,7 @@ contract TAVCalculator {
         assetManagers.push(_treasury);
     }
 
-    function calculateTAV() external returns (uint256 _TAV) {
+    function calculateTAV() external view returns (uint256 _TAV) {
         uint256 orclTotalSupply = ORCL.totalSupply();
         uint256 totalReserve = 0;
         for (uint256 i = 0; i < assetManagers.length; i++) {
@@ -31,7 +31,7 @@ contract TAVCalculator {
         _TAV = calculateTAV(totalReserve, orclTotalSupply);
     }
 
-    function calculateTAV(uint256 totalReserve, uint256 totalORCLSupply) internal returns(uint256) {
+    function calculateTAV(uint256 totalReserve, uint256 totalORCLSupply) internal pure returns(uint256) {
         return (FixedPoint.fraction(totalReserve, totalORCLSupply).decode112with18() / 1e16).mul(1e7);
     }
 }

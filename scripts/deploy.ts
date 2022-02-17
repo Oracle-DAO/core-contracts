@@ -4,22 +4,104 @@
 // When running the script with `npx hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
 import { ethers } from "hardhat";
+import { constants } from "./constants";
 
 async function main() {
-  // Hardhat always runs the compile task when running scripts with its command
-  // line interface.
-  //
-  // If this script is run directly using `node` you may want to call compile
-  // manually to make sure everything is compiled
-  // await hre.run('compile');
+  const [deployer, DAO] = await ethers.getSigners();
 
-  // We get the contract to deploy
-  const Greeter = await ethers.getContractFactory("Greeter");
-  const greeter = await Greeter.deploy("Hello, Hardhat!");
+  const orcl = await ethers.getContractFactory("ORCL");
+  const orclContract = await orcl.deploy();
 
-  await greeter.deployed();
+  await orclContract.deployed();
 
-  console.log("Greeter deployed to:", greeter.address);
+  const StakedORCL = await ethers.getContractFactory("StakedORCL");
+  const sORCLContract = await StakedORCL.deploy();
+  await sORCLContract.deployed();
+
+  // Only Needed for mock.
+  const MIM = await ethers.getContractFactory("MIM");
+  const mim = await MIM.deploy();
+  await mim.deployed();
+
+  const Staking = await ethers.getContractFactory("Staking");
+  const stakingContract = await Staking.deploy(
+    orclContract.address,
+    sORCLContract.address
+  );
+  await stakingContract.deployed();
+
+  const TreasuryHelper = await ethers.getContractFactory("TreasuryHelper");
+  const treasuryHelper = await TreasuryHelper.deploy(
+    orclContract.address,
+    mim.address,
+    constants.blockNeededToWait
+  );
+  await treasuryHelper.deployed();
+
+  const Treasury = await ethers.getContractFactory("Treasury");
+  const treasury = await Treasury.deploy(
+    orclContract.address,
+    treasuryHelper.address
+  );
+  await treasury.deployed();
+
+  const TAVCalculator = await ethers.getContractFactory("TAVCalculator");
+  const tavCalculator = await TAVCalculator.deploy(
+    orclContract.address,
+    treasury.address
+  );
+  await tavCalculator.deployed();
+
+  const Bond = await ethers.getContractFactory("Bond");
+  const bond = await Bond.deploy(
+    orclContract.address,
+    mim.address,
+    treasury.address,
+    DAO.address,
+    constants.zeroAddress
+  );
+  await bond.deployed();
+
+  await bond.initializeBondTerms(
+    constants.mimBondBCV,
+    constants.minBondPrice,
+    constants.maxBondPayout,
+    constants.minBondPayout,
+    constants.bondFee,
+    constants.maxBondDebt,
+    constants.bondVestingLength
+  );
+
+  await orclContract.setVault(treasury.address);
+
+  await sORCLContract.initialize(stakingContract.address);
+
+  // bond depository address will go here
+  await treasuryHelper.queue("0", bond.address);
+
+  // bond depository address will go here
+  await treasuryHelper.toggle("0", bond.address, constants.zeroAddress);
+
+  // reserve spender address will go here. They will burn ORCL
+  await treasuryHelper.queue("1", deployer.address);
+
+  // reserve spender address will go here
+  await treasuryHelper.toggle("1", deployer.address, constants.zeroAddress);
+
+  // reserve manager address will go here. They will allocate money
+  await treasuryHelper.queue("3", deployer.address);
+
+  // reserve manager address will go here. They will allocate money
+  await treasuryHelper.toggle("3", deployer.address, constants.zeroAddress);
+
+  // approve large number for treasury, so that it can move
+  await mim.approve(treasury.address, constants.largeApproval);
+
+  // approve large number for treasury, so that it can transfer token as spender
+  await mim.approve(bond.address, constants.largeApproval);
+
+  // approve treasury address for a user so that treasury can burn orcl for user
+  await orclContract.approve(treasury.address, constants.largeApproval);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

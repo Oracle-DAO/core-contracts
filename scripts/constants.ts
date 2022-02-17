@@ -15,4 +15,5 @@ export class constants {
   public static bondFee = "5000";
   public static maxBondDebt = "1000000000000000000000000";
   public static adjustmentIncrement = "3";
+  public static blockNeededToWait = "0";
 }
