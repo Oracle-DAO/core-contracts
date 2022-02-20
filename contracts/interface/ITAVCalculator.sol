@@ -2,5 +2,5 @@
 pragma solidity ^0.8.0;
 
 interface ITAVCalculator {
-    function calculateTAV() external returns (uint256 _TAV);
+    function calculateTAV() external view returns (uint256 _TAV);
 }

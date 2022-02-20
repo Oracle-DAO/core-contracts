@@ -1,6 +1,6 @@
 #!/bin/bash
 
-npx hardhat run ./deployScripts/ORCL.ts --network metis
+npx hardhat run ./deployScripts/ORCL.ts --network metis &&
 npx hardhat run ./deployScripts/MIM.ts --network metis &&
 npx hardhat run ./deployScripts/TreasuryHelper.ts --network metis &&
 npx hardhat run ./deployScripts/Treasury.ts --network metis &&

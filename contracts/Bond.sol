@@ -403,7 +403,7 @@ contract Bond is Ownable {
    *  @notice converts bond price to DAI value
    *  @return price_ uint
    */
-    function bondPriceInUSD() public returns (uint256 price_) {
+    function bondPriceInUSD() public view returns (uint256 price_) {
         if (isLiquidityBond) {
             price_ = bondPrice().mul(bondCalculator.markdown(address(principle))) / 100;
         } else {
@@ -415,7 +415,7 @@ contract Bond is Ownable {
        *  @notice calculate current bond premium
        *  @return price_ uint
    */
-    function bondPrice() public returns (uint256 price_) {
+    function bondPrice() public view returns (uint256 price_) {
         uint256 premium = terms.controlVariable.mul(debtRatio());
         uint256 TAV = tavCalculator.calculateTAV();
         if (premium < terms.minimumPrice) {
@@ -435,6 +435,10 @@ contract Bond is Ownable {
 
     function minPayout() public view returns (uint256) {
         return terms.minimumPayout;
+    }
+
+    function vestingTerm() public view returns (uint256) {
+        return terms.vestingTerm;
     }
 
     /**
