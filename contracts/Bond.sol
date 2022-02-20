@@ -433,12 +433,8 @@ contract Bond is Ownable {
         return (ORCL.totalSupply().mul(terms.maxPayout) / 100000);
     }
 
-    function minPayout() public view returns (uint256) {
+    function minPayout() internal view returns (uint256) {
         return terms.minimumPayout;
-    }
-
-    function vestingTerm() public view returns (uint256) {
-        return terms.vestingTerm;
     }
 
     /**
@@ -446,7 +442,7 @@ contract Bond is Ownable {
    *  @param _value uint
    *  @return uint
    */
-    function payoutFor(uint256 _value) public returns (uint256) {
+    function payoutFor(uint256 _value) public view returns (uint256) {
         return (FixedPoint.fraction(_value, bondPrice().mul(1e16)).decode112with18() / 1e9).mul(1e9);
     }
 
