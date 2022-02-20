@@ -1,7 +1,6 @@
 // @ts-ignore
 import { ethers } from "hardhat";
 import { readContractAddress, saveFrontendFiles } from "../helpers";
-import { constants } from "../constants";
 
 async function main() {
   const [deployer, MockDao] = await ethers.getSigners();
@@ -15,8 +14,7 @@ async function main() {
     orclAddress,
     mimAddress,
     treasuryAddress,
-    MockDao.address,
-    constants.zeroAddress
+    MockDao.address
   );
   await bond.deployed();
 

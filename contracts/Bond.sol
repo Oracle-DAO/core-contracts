@@ -100,13 +100,8 @@ contract Bond is Ownable {
     ITreasury public immutable treasury; // mints ORCL when receives principle
     address public immutable DAO; // receives profit share from bond
 
-    bool public immutable isLiquidityBond; // LP and Reserve bonds are treated slightly different
-    IBondCalculator public immutable bondCalculator; // calculates value of LP tokens
-
     IStaking public staking; // to auto-stake payout
     ITAVCalculator public tavCalculator; // to auto-stake payout
-//    IStakingHelper public stakingHelper; // to stake and claim if no staking warmup
-//    bool public useHelper;
 
     Terms public terms; // stores terms for new bonds
     Adjust public adjustment; // stores adjustment to BCV data
@@ -122,8 +117,7 @@ contract Bond is Ownable {
         address _ORCL,
         address _principle,
         address _treasury,
-        address _DAO,
-        address _bondCalculator
+        address _DAO
     ) {
         require(_ORCL != address(0));
         ORCL = IERC20(_ORCL);
@@ -133,9 +127,7 @@ contract Bond is Ownable {
         treasury = ITreasury(_treasury);
         require(_DAO != address(0));
         DAO = _DAO;
-        // bondCalculator should be address(0) if not LP bond
-        bondCalculator = IBondCalculator(_bondCalculator);
-        isLiquidityBond = (_bondCalculator != address(0));
+
         principle.approve(_treasury, 1e45);
     }
 
@@ -215,8 +207,8 @@ contract Bond is Ownable {
             _increment <= terms.controlVariable.mul(25) / 1000,
             'Increment too large'
         );
-        require(_maxTarget >= 40, 'Next Adjustment could be locked');
-        require(_minTarget <= 10, 'Next Adjustment could be locked');
+        require(_maxTarget >= 250, 'Next Adjustment could be locked');
+        require(_minTarget <= 250, 'Next Adjustment could be locked');
         adjustment = Adjust({
             add: _addition,
             rate: _increment,
@@ -257,16 +249,15 @@ contract Bond is Ownable {
     ) external returns (uint256) {
         require(_depositor != address(0), 'Invalid address');
         require(msg.sender == _depositor, 'LFNA');
+        decayDebt();
 
         uint256 priceInUSD = bondPriceInUSD(); // Stored in bond info
-        uint256 nativePrice = bondPrice(); // bond price computed in 1e2 equivalent
 
-        require(_maxPrice >= nativePrice, 'Slippage limit: more than max price'); // slippage protection
+        require(_maxPrice >= priceInUSD, 'Slippage limit: more than max price'); // slippage protection
 
-        uint256 value = treasury.valueOfToken(address(principle), _amount, true, false);
-        uint256 payout = payoutFor(value); // payout to bonder is computed in 1e18
+        uint256 payout = payoutFor(_amount); // payout to bonder is computed in 1e18
 
-        require(totalDebt.add(value) <= terms.maxDebt, 'Max capacity reached');
+        require(totalDebt.add(_amount) <= terms.maxDebt, 'Max capacity reached');
         require(payout >= minPayout(), 'Bond too small'); // must be > 0.01 ORCL ( underflow protection )
         require(payout <= maxPayout(), 'Bond too large'); // size protection because there is no slippage
 
@@ -283,7 +274,7 @@ contract Bond is Ownable {
         }
 
         // total debt is increased
-        totalDebt = totalDebt.add(value);
+        totalDebt = totalDebt.add(_amount);
 
         // depositor info is stored
         bondInfo[_depositor] = BondInfo({
@@ -400,15 +391,11 @@ contract Bond is Ownable {
     }
 
     /**
-   *  @notice converts bond price to DAI value
+   *  @notice converts bond price to StableCoin value
    *  @return price_ uint
    */
     function bondPriceInUSD() public view returns (uint256 price_) {
-        if (isLiquidityBond) {
-            price_ = bondPrice().mul(bondCalculator.markdown(address(principle))) / 100;
-        } else {
-            price_ = bondPrice();
-        }
+        price_ = bondPrice();
     }
 
     /**
@@ -418,10 +405,9 @@ contract Bond is Ownable {
     function bondPrice() public view returns (uint256 price_) {
         uint256 premium = terms.controlVariable.mul(debtRatio());
         uint256 TAV = tavCalculator.calculateTAV();
-        if (premium < terms.minimumPrice) {
-            premium = terms.minimumPrice;
+        if (premium < (TAV.mul(terms.fee)).div(1e5)) {
+            premium = (TAV.mul(terms.fee)).div(1e5);
         }
-
         price_ = (premium).add(TAV) / 1e7;
     }
 

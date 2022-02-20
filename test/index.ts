@@ -229,8 +229,7 @@ describe("Bond Testing", function () {
       orcl.address,
       mim.address,
       treasury.address,
-      DAO.address,
-      constants.zeroAddress
+      DAO.address
     );
 
     await bond.deployed();
@@ -284,7 +283,7 @@ describe("Staking Test", function () {
   let sorcl: StakedORCL;
   let staking: Staking;
 
-  const delay = async (ms: number) => new Promise(res => setTimeout(res, ms));
+  const delay = async (ms: number) => new Promise((res) => setTimeout(res, ms));
 
   beforeEach(async () => {
     [deployer] = await ethers.getSigners();
@@ -310,12 +309,10 @@ describe("Staking Test", function () {
 
     await staking.deployed();
     await sorcl.initialize(staking.address);
-
   });
 
-  describe("Test user Stake and unstake", function() {
+  describe("Test user Stake and unstake", function () {
     it("Test user Stake and unstake", async function () {
-
       await orcl.approve(staking.address, stakingAmount);
       await staking.stake(stakingAddress, stakingAmount);
 
@@ -331,13 +328,11 @@ describe("Staking Test", function () {
 
       expect(await orcl.balanceOf(staking.address)).to.equal(0);
       expect(await orcl.balanceOf(stakingAddress)).to.equal(stakingAmount);
-
     });
   });
 
-  describe("Test user Stake with warmup and claim and then unstake", function() {
+  describe("Test user Stake with warmup and claim and then unstake", function () {
     it("Test user Stake with warmup and claim and then unstake", async function () {
-
       await staking.setWarmupLength(1);
       await orcl.approve(staking.address, stakingAmount);
       await staking.stake(stakingAddress, stakingAmount);
@@ -366,9 +361,8 @@ describe("Staking Test", function () {
     });
   });
 
-  describe("Test user Stake with warmup and forfeit", function() {
+  describe("Test user Stake with warmup and forfeit", function () {
     it("DTest user Stake with warmup and forfeit", async function () {
-
       await staking.setWarmupLength(1);
       await orcl.approve(staking.address, stakingAmount);
       await staking.stake(stakingAddress, stakingAmount);
@@ -386,8 +380,6 @@ describe("Staking Test", function () {
 
       expect(await orcl.balanceOf(staking.address)).to.equal(0);
       expect(await orcl.balanceOf(stakingAddress)).to.equal(stakingAmount);
-
     });
   });
-
 });
