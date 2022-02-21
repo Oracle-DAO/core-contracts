@@ -49,6 +49,7 @@ async function main() {
   );
 
   await mimBond.setTAVCalculator(tavCalculator.address);
+  await mimBond.setStaking(staking.address);
 
   await orcl.setVault(treasury.address);
 

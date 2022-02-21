@@ -346,8 +346,7 @@ contract Bond is Ownable {
             // if user does not want to stake
             ORCL.transfer(_recipient, _amount); // send payout
         } else {
-            ORCL.approve(address(staking), _amount);
-            staking.stake(_amount, _recipient);
+            staking.stake(_recipient, _amount);
         }
         return _amount;
     }
@@ -403,11 +402,8 @@ contract Bond is Ownable {
        *  @return price_ uint
    */
     function bondPrice() public view returns (uint256 price_) {
-        uint256 premium = terms.controlVariable.mul(debtRatio());
         uint256 TAV = tavCalculator.calculateTAV();
-        if (premium < (TAV.mul(terms.fee)).div(1e5)) {
-            premium = (TAV.mul(terms.fee)).div(1e5);
-        }
+        uint256 premium = TAV.mul(terms.fee).div(1e5) + terms.controlVariable.mul(debtRatio());
         price_ = (premium).add(TAV) / 1e7;
     }
 
