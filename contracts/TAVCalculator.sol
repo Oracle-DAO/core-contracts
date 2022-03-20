@@ -32,6 +32,6 @@ contract TAVCalculator {
     }
 
     function calculateTAV(uint256 totalReserve, uint256 totalORCLSupply) internal pure returns(uint256) {
-        return (FixedPoint.fraction(totalReserve, totalORCLSupply).decode112with18() / 1e16).mul(1e7);
+        return (FixedPoint.fraction(totalReserve, totalORCLSupply).decode112with18() / 1e9);
     }
 }
