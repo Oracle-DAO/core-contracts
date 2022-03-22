@@ -11,6 +11,7 @@ const tavCalculatorAdd = readContractAddress("/TAVCalculator.json");
 const stakingAdd = readContractAddress("/Staking.json");
 const treasuryAdd = readContractAddress("/Treasury.json");
 const TreasuryHelperAdd = readContractAddress("/TreasuryHelper.json");
+const RewardDistributorAdd = readContractAddress("/RewardDistributor.json");
 
 async function main() {
   const [deployer] = await ethers.getSigners();
@@ -38,6 +39,9 @@ async function main() {
   const TAVCalculator = await ethers.getContractFactory("TAVCalculator");
   const tavCalculator = await TAVCalculator.attach(tavCalculatorAdd);
 
+  const RewardDistributor = await ethers.getContractFactory("RewardDistributor");
+  const rewardDistributor = await RewardDistributor.attach(RewardDistributorAdd);
+
   await mimBond.initializeBondTerms(
     constants.mimBondBCV,
     constants.minBondPrice,
@@ -50,6 +54,8 @@ async function main() {
 
   await mimBond.setTAVCalculator(tavCalculator.address);
   await mimBond.setStaking(staking.address);
+
+  await staking.setRewardDistributor(rewardDistributor.address);
 
   await orcl.setVault(treasury.address);
 
@@ -79,6 +85,12 @@ async function main() {
   // reserve manager address will go here. They will allocate money
   await treasuryHelper.toggle("3", deployer.address, constants.zeroAddress);
 
+  // reserve manager address will go here. They will allocate money
+  await treasuryHelper.queue("3", rewardDistributor.address);
+
+  // reserve manager address will go here. They will allocate money
+  await treasuryHelper.toggle("3", rewardDistributor.address, constants.zeroAddress);
+
   // approve large number for treasury, so that it can move
   await mim.approve(treasury.address, constants.largeApproval);
 
@@ -100,6 +112,10 @@ async function main() {
     "5000000000000000000000000" // amount of orcl to mint
   );
 
+  await rewardDistributor.setTreasuryAddress(treasury.address);
+
+  await rewardDistributor.setStableCoinAddress(mim.address);
+
   console.log("contracts are attached to their ABIs");
   console.log("ORCL: " + orclAdd);
   console.log("MIM Token: " + mimAdd);
@@ -108,6 +124,7 @@ async function main() {
   console.log("TAV Calculator: " + tavCalculatorAdd);
   console.log("Staking: " + stakingAdd);
   console.log("sORCL: " + sORCLAdd);
+  console.log("RewardDistributor: " + RewardDistributorAdd);
   console.log("MIM-ORCL Bond: " + mimBond.address);
 }
 

@@ -12,4 +12,6 @@ interface ITreasury {
     external
     view
     returns (uint256 value_);
+
+  function manage(address _token, uint256 _amount) external;
 }

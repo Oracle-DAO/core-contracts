@@ -178,11 +178,17 @@ contract Treasury is Ownable {
      */
     function manage(address _token, uint256 _amount) external {
         bool isLPToken = ITreasuryHelper(treasuryHelper).isLiquidityToken(_token);
+        bool isReserveToken = ITreasuryHelper(treasuryHelper).isReserveToken(_token);
         if (isLPToken) {
             require(ITreasuryHelper(treasuryHelper).isLiquidityManager(msg.sender), 'NApproved');
-        } else {
+        }
+        console.log("is reserve Token", isReserveToken);
+        console.log("msg.sender is", msg.sender);
+
+        if (isReserveToken) {
             require(ITreasuryHelper(treasuryHelper).isReserveManager(msg.sender), 'NApproved');
         }
+
         _totalReserves = _totalReserves.sub(_amount);
         emit ReservesUpdated(_totalReserves);
         IERC20(_token).safeTransfer(msg.sender, _amount);

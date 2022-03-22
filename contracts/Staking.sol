@@ -7,6 +7,7 @@ import "./interface/IERC20.sol";
 import "./library/SafeERC20.sol";
 
 import "hardhat/console.sol";
+import "./interface/IRewardDistributor.sol";
 
 contract Staking is Ownable {
   /* ========== DEPENDENCIES ========== */
@@ -37,6 +38,7 @@ contract Staking is Ownable {
 
   IERC20 public immutable ORCL;
   IERC20 public immutable sORCL;
+  IRewardDistributor public rewardDistributor;
 
   mapping(address => Claim) public warmupInfo;
   uint256 public warmupPeriod;
@@ -54,6 +56,10 @@ contract Staking is Ownable {
     sORCL = IERC20(_sorcl);
   }
 
+  function setRewardDistributor(address rewardDistributor_) external {
+    rewardDistributor = IRewardDistributor(rewardDistributor_);
+  }
+
   /* ========== MUTATIVE FUNCTIONS ========== */
 
   /**
@@ -68,7 +74,9 @@ contract Staking is Ownable {
   ) external returns (uint256) {
     ORCL.safeTransferFrom(msg.sender, address(this), _amount);
     if (warmupPeriod == 0) {
-      return _send(_to, _amount);
+      _send(_to, _amount);
+      rewardDistributor.stake(_to, _amount);
+      return _amount;
     } else {
         Claim memory info = warmupInfo[_to];
         if (!info.lock) {
@@ -139,6 +147,7 @@ contract Staking is Ownable {
     sORCL.burn(msg.sender, _amount);
     require(_amount <= ORCL.balanceOf(address(this)), "Insufficient ORCL balance in contract");
     ORCL.safeTransfer(_to, _amount);
+    rewardDistributor.unstake(_to, amount_);
     return _amount;
   }
 
@@ -182,5 +191,9 @@ contract Staking is Ownable {
   function setWarmupLength(uint256 _warmupPeriod) external onlyOwner {
     warmupPeriod = _warmupPeriod;
     emit WarmupSet(_warmupPeriod);
+  }
+
+  function getRewardDistributorAddress() external view returns(address) {
+    return address(rewardDistributor);
   }
 }
