@@ -89,7 +89,7 @@ contract RewardDistributor is Ownable {
         updateStakeOrclBalance(to_, amount, false);
     }
 
-    function redeemTotalRewards(address account_) external {
+    function redeemTotalRewardsForUser(address account_) external {
         require(account_ != address(0));
         for(uint8 i = _userRecentRedeemMapping[account_]+1; i<currentRewardCycle; i++){
             redeemRewardsForACycle(account_, i);
@@ -102,10 +102,11 @@ contract RewardDistributor is Ownable {
         _totalRewardsAllocated -= rewards;
         _userRecentRedeemMapping[account_] = rewardCycle_;
         ITreasury(_treasury).manage(_stableCoinAddress, rewards);
+        IERC20(_stableCoinAddress).transfer(account_, rewards);
         emit RedeemedRewards(account_, rewards, rewardCycle_);
     }
 
-    function rewardsForACycle(address account_, uint8 rewardCycle_) public returns(uint256) {
+    function rewardsForACycle(address account_, uint8 rewardCycle_) public view returns(uint256) {
         require(account_ != address(0));
         require(rewardCycle_ < currentRewardCycle, "Invalid Reward Cycle");
 
@@ -170,7 +171,7 @@ contract RewardDistributor is Ownable {
         return (FixedPoint.fraction(totalStakeTimeValue, totalStakedOrclAmount).decode112with18() / 1e15).mul(1e15);
     }
 
-    function calculateRewards(uint256 investedTime, uint256 stakedOrclPortion, uint256 totalRewards) internal returns(uint256) {
+    function calculateRewards(uint256 investedTime, uint256 stakedOrclPortion, uint256 totalRewards) internal pure returns(uint256) {
         return (investedTime.mul(stakedOrclPortion).mul(totalRewards)).div(1e36);
     }
 
@@ -189,5 +190,14 @@ contract RewardDistributor is Ownable {
     function getRewardCycleTimeWindow(uint8 rewardCycleId) external view returns(uint32 startTime_, uint32 endTime_) {
         startTime_ = _rewardCycleMapping[rewardCycleId].startTimestamp;
         endTime_ = _rewardCycleMapping[rewardCycleId].endTimestamp;
+    }
+
+    function getTotalRewardsForUser(address account_) external view returns(uint256) {
+        require(account_ != address(0));
+        uint256 totalRewards_ = 0;
+        for(uint8 i = _userRecentRedeemMapping[account_]+1; i<currentRewardCycle; i++){
+            totalRewards_ += rewardsForACycle(account_, i);
+        }
+        return totalRewards_;
     }
 }
