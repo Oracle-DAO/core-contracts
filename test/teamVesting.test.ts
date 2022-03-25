@@ -95,7 +95,7 @@ describe("NTT and Project Management Contract", async () => {
     expect(await projectManagement.totalRemainingTeamToken()).to.equal(
       "800000000000000000000000"
     );
-    await projectManagement.blacklistMember(user1.address);
+    await projectManagement.blacklistAndRedeem(user1.address);
 
     await expect(projectManagement.connect(user1).redeem(user1.address)).to.revertedWith("Not a team member")
   });

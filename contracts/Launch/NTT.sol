@@ -18,6 +18,7 @@ contract NTT is  Context, Ownable, ERC20 {
     address private orclAddress;
     uint256 private totalOrclRedeemed;
 
+    // TODO Need to make transfer, approve onlyowner/onlyProjectManagement and balanceOf only(msg.sender)
 
     constructor() ERC20('Non Transferable Oracle Token', 'nORCL') {
         redeemable = false;
