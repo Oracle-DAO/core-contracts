@@ -37,11 +37,11 @@ contract ORFI is  Context, VaultOwned, ERC20 {
         _mint(account, amount);
     }
 
-    function burnFrom(address account_, uint256 amount_) external virtual {
+    function burnFrom(address account_, uint256 amount_) external {
         _burnFrom(account_, amount_);
     }
 
-    function _burnFrom(address account_, uint256 amount_) internal virtual {
+    function _burnFrom(address account_, uint256 amount_) internal {
         uint256 decreasedAllowance_ = allowance(account_, msg.sender).sub(amount_);
         _approve(account_, msg.sender, decreasedAllowance_);
         _burn(account_, amount_);

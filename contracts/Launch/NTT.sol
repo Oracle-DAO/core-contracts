@@ -24,6 +24,7 @@ contract NTT is  Context, Ownable, ERC20 {
         redeemable = false;
         transferApprovedAddress[msg.sender] = true;
         totalNTTSupply = 5*1e24;
+
         totalNTTMinted = 0;
     }
 
@@ -35,24 +36,18 @@ contract NTT is  Context, Ownable, ERC20 {
         transferApprovedAddress[account_] = false;
     }
 
-    function setOrfiAddress(address orfiAddress_) external onlyOwner{
+    function setOrfiAddress(address orfiAddress_) external onlyOwner {
         orfiAddress = orfiAddress_;
     }
 
-    function mint(address account, uint256 amount) external onlyOwner{
+    function mint(address account, uint256 amount) external onlyOwner {
         require(totalNTTMinted + amount <= totalNTTSupply, "Total supply will expected NTT supply");
         totalNTTMinted += amount;
         _mint(account, amount);
     }
 
-    function burnFrom(address account_, uint256 amount_) external virtual {
-        _burnFrom(account_, amount_);
-    }
-
-    function _burnFrom(address account_, uint256 amount_) internal virtual {
-        uint256 decreasedAllowance_ = allowance(account_, msg.sender).sub(amount_);
-        _approve(account_, msg.sender, decreasedAllowance_);
-        _burn(account_, amount_);
+    function burn(uint256 amount_) external {
+        _burn(msg.sender, amount_);
     }
 
     function _beforeTokenTransfer(
