@@ -1,4 +1,4 @@
-//SPDX-License-Identifier: Unlicense
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
@@ -10,8 +10,6 @@ import "./interface/ITAVCalculator.sol";
 
 import "./library/FixedPoint.sol";
 import "./library/SafeERC20.sol";
-
-import "hardhat/console.sol";
 import "./library/LowGasSafeMath.sol";
 import "./interface/IStaking.sol";
 
@@ -63,12 +61,12 @@ contract Bond is Ownable {
         uint256 fee; // as % of bond payout, in hundreths. ( 500 = 5% = 0.05 for every 1 paid)
         uint256 maxDebt; // 9 decimal debt ratio, max % total supply created as debt
         uint32 vestingTerm; // in seconds
-        uint256 minimumPayout; // minimum ORCL that needs to be bonded for
+        uint256 minimumPayout; // minimum ORFI that needs to be bonded for
     }
 
     // Info for bond holder
     struct BondInfo {
-        uint256 payout; // ORCL remaining to be paid
+        uint256 payout; // ORFI remaining to be paid
         uint256 pricePaid; // In DAI, for front end viewing
         uint32 lastTime; // Last interaction
         uint32 vesting; // Seconds left to vest
@@ -95,9 +93,9 @@ contract Bond is Ownable {
 
     /* ======== STATE VARIABLES ======== */
 
-    IERC20 public immutable ORCL; // token given as payment for bond
+    IERC20 public immutable ORFI; // token given as payment for bond
     IERC20 public principle; // token used to create bond
-    ITreasury public immutable treasury; // mints ORCL when receives principle
+    ITreasury public immutable treasury; // mints ORFI when receives principle
     address public immutable DAO; // receives profit share from bond
 
     IStaking public staking; // to auto-stake payout
@@ -114,13 +112,13 @@ contract Bond is Ownable {
     /* ======== INITIALIZATION ======== */
 
     constructor(
-        address _ORCL,
+        address _ORFI,
         address _principle,
         address _treasury,
         address _DAO
     ) {
-        require(_ORCL != address(0));
-        ORCL = IERC20(_ORCL);
+        require(_ORFI != address(0));
+        ORFI = IERC20(_ORFI);
         require(_principle != address(0));
         principle = IERC20(_principle);
         require(_treasury != address(0));
@@ -223,7 +221,7 @@ contract Bond is Ownable {
     function setStaking(address _staking) external onlyOwner {
         require(_staking != address(0), 'IA');
         staking = IStaking(_staking);
-        ORCL.approve(address(staking), 1e45);
+        ORFI.approve(address(staking), 1e45);
         emit LogSetStaking(_staking);
     }
 
@@ -258,19 +256,19 @@ contract Bond is Ownable {
         uint256 payout = payoutFor(_amount); // payout to bonder is computed in 1e18
 
         require(totalDebt.add(_amount) <= terms.maxDebt, 'Max capacity reached');
-        require(payout >= minPayout(), 'Bond too small'); // must be > 0.01 ORCL ( underflow protection )
+        require(payout >= minPayout(), 'Bond too small'); // must be > 0.01 ORFI ( underflow protection )
         require(payout <= maxPayout(), 'Bond too large'); // size protection because there is no slippage
 
         // profits are calculated
         uint256 fee = payout.mul(terms.fee) / 100000;
-        uint256 orclToMint = payout.add(fee);
+        uint256 orfiToMint = payout.add(fee);
 
         principle.safeTransferFrom(msg.sender, address(this), _amount);
-        treasury.deposit(_amount, address(principle), orclToMint);
+        treasury.deposit(_amount, address(principle), orfiToMint);
 
         if (fee != 0) {
             // fee is transferred to dao
-            ORCL.safeTransfer(DAO, fee);
+            ORFI.safeTransfer(DAO, fee);
         }
 
         // total debt is increased
@@ -344,7 +342,7 @@ contract Bond is Ownable {
     ) internal returns (uint256) {
         if (!_stake) {
             // if user does not want to stake
-            ORCL.transfer(_recipient, _amount); // send payout
+            ORFI.transfer(_recipient, _amount); // send payout
         } else {
             staking.stake(_recipient, _amount);
         }
@@ -412,7 +410,7 @@ contract Bond is Ownable {
    *  @return uint
    */
     function maxPayout() public view returns (uint256) {
-        return (ORCL.totalSupply().mul(terms.maxPayout) / 100000);
+        return (ORFI.totalSupply().mul(terms.maxPayout) / 100000);
     }
 
     function minPayout() internal view returns (uint256) {
@@ -429,11 +427,11 @@ contract Bond is Ownable {
     }
 
     /**
-    *  @notice calculate current ratio of debt to ORCL supply
+    *  @notice calculate current ratio of debt to ORFI supply
     *  @return debtRatio_ uint
     */
     function debtRatio() public view returns (uint256 debtRatio_) {
-        uint256 supply = ORCL.totalSupply();
+        uint256 supply = ORFI.totalSupply();
         debtRatio_ = FixedPoint.fraction(currentDebt().mul(1e9), supply).decode112with18() / 1e18;
     }
 
@@ -479,7 +477,7 @@ contract Bond is Ownable {
     }
 
     /**
-   *  @notice calculate amount of ORCL available for claim by depositor
+   *  @notice calculate amount of ORFI available for claim by depositor
    *  @param _depositor address
    *  @return pendingPayout_ uint
    */
@@ -501,11 +499,11 @@ contract Bond is Ownable {
     /* ======= AUXILLIARY ======= */
 
     /**
-     *  @notice allow anyone to send lost tokens (excluding principle or ORCL) to the DAO
+     *  @notice allow anyone to send lost tokens (excluding principle or ORFI) to the DAO
    *  @return bool
    */
     function recoverLostToken(IERC20 _token) external returns (bool) {
-        require(_token != ORCL, 'NAT');
+        require(_token != ORFI, 'NAT');
         require(_token != principle, 'NAP');
         uint256 balance = _token.balanceOf(address(this));
         _token.safeTransfer(DAO, balance);

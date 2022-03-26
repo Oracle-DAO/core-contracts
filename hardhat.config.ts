@@ -27,7 +27,9 @@ const config: HardhatUserConfig = {
   networks: {
     oasis: {
       url: "https://testnet.emerald.oasis.dev",
+      accounts: [
 
+      ],
     },
   },
   gasReporter: {

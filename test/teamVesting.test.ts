@@ -6,7 +6,7 @@ import { Contract } from "ethers";
 describe("NTT and Project Management Contract", async () => {
   let nttContract: Contract,
     projectManagement: Contract,
-    mockOrcl: Contract,
+    mockOrfi: Contract,
     deployer: any,
     user1: any,
     user2: any,
@@ -18,19 +18,19 @@ describe("NTT and Project Management Contract", async () => {
   before(async () => {
     [deployer, user1, user2, user3] = await ethers.getSigners();
 
-    const mockOrclFact = await ethers.getContractFactory("MockORCL");
-    mockOrcl = await mockOrclFact.deploy();
+    const mockOrfiFact = await ethers.getContractFactory("MockORFI");
+    mockOrfi = await mockOrfiFact.deploy();
 
-    await mockOrcl.deployed();
+    await mockOrfi.deployed();
 
     const nttFact = await ethers.getContractFactory("NTT");
     nttContract = await nttFact.deploy();
 
     await nttContract.deployed();
 
-    await nttContract.setOrclAddress(mockOrcl.address);
+    await nttContract.setOrfiAddress(mockOrfi.address);
 
-    await mockOrcl.mint(nttContract.address, "5000000000000000000000000");
+    await mockOrfi.mint(nttContract.address, "5000000000000000000000000");
 
     const ProjectManagementFact = await ethers.getContractFactory(
       "ProjectManagement"
@@ -43,10 +43,12 @@ describe("NTT and Project Management Contract", async () => {
       projectManagement.address,
       "1500000000000000000000000"
     );
+
+    await nttContract.approveAddressForTransfer(projectManagement.address);
   });
 
-  it("Check orcl and nOrcl Balance", async function () {
-    expect(await mockOrcl.balanceOf(nttContract.address)).to.equal(
+  it("Check orfi and nOrfi Balance", async function () {
+    expect(await mockOrfi.balanceOf(nttContract.address)).to.equal(
       "5000000000000000000000000"
     );
 
@@ -95,7 +97,7 @@ describe("NTT and Project Management Contract", async () => {
     expect(await projectManagement.totalRemainingTeamToken()).to.equal(
       "800000000000000000000000"
     );
-    await projectManagement.blacklistMember(user1.address);
+    await projectManagement.blacklistAndRedeem(user1.address);
 
     await expect(projectManagement.connect(user1).redeem(user1.address)).to.revertedWith("Not a team member")
   });
@@ -112,17 +114,27 @@ describe("NTT and Project Management Contract", async () => {
     expect(await projectManagement.totalRemainingMarketingToken()).to.equal("450000000000000000000000")
   });
 
-  it("Redeem ORCL for nORCL", async function () {
+  it("Redeem ORFI for nORFI", async function () {
     await nttContract.toggleRedeemFlag();
 
     const user1NttBalance = await nttContract.balanceOf(user1.address);
     const user2NttBalance = await nttContract.balanceOf(user2.address);
 
-    await nttContract.connect(user1).redeemORCL(user1NttBalance);
-    await nttContract.connect(user2).redeemORCL(user2NttBalance);
+    await nttContract.connect(user1).redeemORFI(user1NttBalance);
+    await nttContract.connect(user2).redeemORFI(user2NttBalance);
 
-    expect(await mockOrcl.balanceOf(user1.address)).to.equal(user1NttBalance);
-    expect(await mockOrcl.balanceOf(user2.address)).to.equal(user2NttBalance);
+    expect(await mockOrfi.balanceOf(user1.address)).to.equal(user1NttBalance);
+    expect(await mockOrfi.balanceOf(user2.address)).to.equal(user2NttBalance);
+  });
+
+  it("Check Excess mint of NTT", async function () {
+    const totalSupply = await nttContract.totalNTTMinted();
+    expect(totalSupply).to.equal("1500000000000000000000000");
+
+    await nttContract.mint(user3.address, "3500000000000000000000000");
+    expect(await nttContract.totalNTTMinted()).to.equal("5000000000000000000000000");
+
+    await expect(nttContract.mint(user3.address, "1000000000000000000")).to.revertedWith("Total supply will expected NTT supply");
   });
 
 });

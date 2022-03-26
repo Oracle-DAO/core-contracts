@@ -1,16 +1,17 @@
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "../library/LowGasSafeMath.sol";
 
 import "../interface/IERC20.sol";
-import "hardhat/console.sol";
 
 contract ProjectManagement is Ownable{
 
     event MemberInfoAdded(address indexed account, uint256 amount, uint32 vestingPeriod);
     event TeamTokenRedeemed(address indexed account, uint256 payout, uint256 remaining);
     event MarketingTokenRedeemed(address indexed account, uint256 payout, uint256 remaining);
+    event BlacklistedMember(address indexed account, uint payout);
 
     using LowGasSafeMath for uint256;
     using LowGasSafeMath for uint32;
@@ -70,11 +71,12 @@ contract ProjectManagement is Ownable{
         emit MemberInfoAdded(account_, amount_, vestingPeriod_);
     }
 
-    function redeem(address account_) external onlyTeamMember {
+    function redeem(address account_) public onlyTeamMember {
         require(account_ != address(0));
         uint32 percentVested = checkPercentVested(account_);
         MemberInfo memory memberInfo = _tokenAllocation[account_];
-        if(percentVested >= 10000){
+
+        if(percentVested == 10000){
             _totalAmountRedeemed += memberInfo.payout;
             delete _tokenAllocation[account_];
             emit TeamTokenRedeemed(account_, memberInfo.payout, 0);
@@ -112,15 +114,26 @@ contract ProjectManagement is Ownable{
         send(account_, amount);
     }
 
-    function blacklistMember(address account_) external onlyOwner {
+    function blacklistAndRedeem(address account_) external onlyOwner {
+        MemberInfo memory memberInfo = _tokenAllocation[account_];
+        if(memberInfo.payout == 0){
+            return;
+        }
         _whitelisted[account_] = false;
+        uint32 percentVested = checkPercentVested(account_);
+        uint256 payout = memberInfo.payout.mul(percentVested) / 10000;
+        _totalAmountRedeemed += payout;
+        _totalRemainingTeamTokens += memberInfo.payout.sub(payout);
+        delete _tokenAllocation[account_];
+        emit BlacklistedMember(account_, payout);
+        return send(account_, payout);
     }
 
     function send(address account_, uint256 amount) internal {
         IERC20(_nttAddress).transfer(account_, amount);
     }
 
-    function checkPercentVested(address account_) public returns(uint32 percentVested_) {
+    function checkPercentVested(address account_) public view returns(uint32 percentVested_) {
         MemberInfo memory memberInfo = _tokenAllocation[account_];
         uint32 secondsSinceLast = uint32(block.timestamp).sub32(memberInfo.lastRedeemTime);
         if(secondsSinceLast >= memberInfo.vestingPeriod){

@@ -3,9 +3,9 @@ import { ethers } from "hardhat";
 import { readContractAddress } from "../helpers";
 import { constants } from "../constants";
 
-const sORCLAdd = readContractAddress("/StakedORCL.json");
+const sORFIAdd = readContractAddress("/StakedORFI.json");
 const mimAdd = readContractAddress("/MIM.json");
-const orclAdd = readContractAddress("/ORCL.json");
+const orfiAdd = readContractAddress("/ORFI.json");
 const bondAdd = readContractAddress("/Bond.json");
 const tavCalculatorAdd = readContractAddress("/TAVCalculator.json");
 const stakingAdd = readContractAddress("/Staking.json");
@@ -18,11 +18,11 @@ async function main() {
   const MIMBond = await ethers.getContractFactory("Bond");
   const mimBond = await MIMBond.attach(bondAdd);
 
-  const ORCL = await ethers.getContractFactory("ORCL");
-  const orcl = await ORCL.attach(orclAdd);
+  const ORFI = await ethers.getContractFactory("ORFI");
+  const orfi = await ORFI.attach(orfiAdd);
 
-  const StakedORCL = await ethers.getContractFactory("StakedORCL");
-  const sORCL = await StakedORCL.attach(sORCLAdd);
+  const StakedORFI = await ethers.getContractFactory("StakedORFI");
+  const sORFI = await StakedORFI.attach(sORFIAdd);
 
   const Treasury = await ethers.getContractFactory("Treasury");
   const treasury = await Treasury.attach(treasuryAdd);
@@ -57,9 +57,9 @@ async function main() {
 
   await staking.setRewardDistributor(rewardDistributor.address);
 
-  await orcl.setVault(treasury.address);
+  await orfi.setVault(treasury.address);
 
-  await sORCL.initialize(staking.address);
+  await sORFI.initialize(staking.address);
 
   // bond depository address will go here
   await treasuryHelper.queue("0", mimBond.address);
@@ -73,7 +73,7 @@ async function main() {
   // temporary deployer address for testing
   await treasuryHelper.toggle("0", deployer.address, constants.zeroAddress);
 
-  // reserve spender address will go here. They will burn ORCL
+  // reserve spender address will go here. They will burn ORFI
   await treasuryHelper.queue("1", deployer.address);
 
   // reserve spender address will go here
@@ -97,19 +97,19 @@ async function main() {
   // approve large number for treasury, so that it can transfer token as spender
   await mim.approve(mimBond.address, constants.largeApproval);
 
-  // approve treasury address for a user so that treasury can burn orcl for user
-  await orcl.approve(treasury.address, constants.largeApproval);
+  // approve treasury address for a user so that treasury can burn orfi for user
+  await orfi.approve(treasury.address, constants.largeApproval);
 
   await treasury.setTAVCalculator(tavCalculator.address);
 
   // mint mim for msg.sender
   await mim.mint(deployer.address, "10000000000000000000000000");
 
-  // Deposit 5,000,000 MIM and mint 5,000,000 ORCL
+  // Deposit 5,000,000 MIM and mint 5,000,000 ORFI
   await treasury.deposit(
     "5000000000000000000000000", // reserve token amount to deposit
     mim.address,
-    "5000000000000000000000000" // amount of orcl to mint
+    "5000000000000000000000000" // amount of orfi to mint
   );
 
   await rewardDistributor.setTreasuryAddress(treasury.address);
@@ -117,15 +117,15 @@ async function main() {
   await rewardDistributor.setStableCoinAddress(mim.address);
 
   console.log("contracts are attached to their ABIs");
-  console.log("ORCL: " + orclAdd);
+  console.log("ORFI: " + orfiAdd);
   console.log("MIM Token: " + mimAdd);
   console.log("Treasury: " + treasuryAdd);
   console.log("TreasuryHelper: " + TreasuryHelperAdd);
   console.log("TAV Calculator: " + tavCalculatorAdd);
   console.log("Staking: " + stakingAdd);
-  console.log("sORCL: " + sORCLAdd);
+  console.log("sORFI: " + sORFIAdd);
   console.log("RewardDistributor: " + RewardDistributorAdd);
-  console.log("MIM-ORCL Bond: " + mimBond.address);
+  console.log("MIM-ORFI Bond: " + mimBond.address);
 }
 
 main().catch((error) => {

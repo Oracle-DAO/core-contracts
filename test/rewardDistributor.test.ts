@@ -4,8 +4,8 @@ import { ethers } from "hardhat";
 import { constants } from "../scripts/constants";
 import { Contract } from "ethers";
 describe("Reward Distributor", async () => {
-  let mockOrcl: Contract,
-    mockStakedOrcl: Contract,
+  let mockOrfi: Contract,
+    mockStakedOrfi: Contract,
     mockStaking: any,
     rewardDistributor: Contract,
     deployer: any,
@@ -21,15 +21,15 @@ describe("Reward Distributor", async () => {
   before(async () => {
     [deployer, user1, user2] = await ethers.getSigners();
 
-    const mockOrclFact = await ethers.getContractFactory("MockORCL");
-    mockOrcl = await mockOrclFact.deploy();
+    const mockOrfiFact = await ethers.getContractFactory("MockORFI");
+    mockOrfi = await mockOrfiFact.deploy();
 
-    await mockOrcl.deployed();
+    await mockOrfi.deployed();
 
-    const mockStakedORCLFact = await ethers.getContractFactory(
-      "MockStakedORCL"
+    const mockStakedORFIFact = await ethers.getContractFactory(
+      "MockStakedORFI"
     );
-    mockStakedOrcl = await mockStakedORCLFact.deploy();
+    mockStakedOrfi = await mockStakedORFIFact.deploy();
 
     const mockMimFact = await ethers.getContractFactory(
       "MIM"
@@ -37,12 +37,12 @@ describe("Reward Distributor", async () => {
     mim = await mockMimFact.deploy();
     await mim.deployed();
 
-    await mockStakedOrcl.deployed();
+    await mockStakedOrfi.deployed();
 
     const mockStakingFact = await ethers.getContractFactory("MockStaking");
     mockStaking = await mockStakingFact.deploy(
-      mockOrcl.address,
-      mockStakedOrcl.address
+      mockOrfi.address,
+      mockStakedOrfi.address
     );
 
     await mockStaking.deployed();
@@ -52,19 +52,19 @@ describe("Reward Distributor", async () => {
     );
     rewardDistributor = await rewardDistributorFact.deploy(
       mockStaking.address,
-      mockStakedOrcl.address
+      mockStakedOrfi.address
     );
 
     await rewardDistributor.deployed();
 
-    await mockStakedOrcl.mint(deployer.address, constants.initialMint);
+    await mockStakedOrfi.mint(deployer.address, constants.initialMint);
 
     const treasuryHelperFact = await ethers.getContractFactory("TreasuryHelper");
-    treasuryHelper = await treasuryHelperFact.deploy(mockOrcl.address, mim.address, 0);
+    treasuryHelper = await treasuryHelperFact.deploy(mockOrfi.address, mim.address, 0);
     await treasuryHelper.deployed();
 
     const treasuryFact = await ethers.getContractFactory("Treasury");
-    treasury = await treasuryFact.deploy(mockOrcl.address, treasuryHelper.address);
+    treasury = await treasuryFact.deploy(mockOrfi.address, treasuryHelper.address);
     await treasury.deployed();
 
     await treasuryHelper.queue("3", rewardDistributor.address);
@@ -72,41 +72,37 @@ describe("Reward Distributor", async () => {
     // reserve spender address will go here
     await treasuryHelper.toggle("3", rewardDistributor.address, constants.zeroAddress);
 
-    console.log(await treasuryHelper.isReserveManager(rewardDistributor.address));
-
     await mim.approve(treasury.address, constants.largeApproval);
     await mim.mint(treasury.address, constants.largeApproval);
   });
 
-  // it("Check staking and stakedOrcl Address", async function () {
-  //   expect(await rewardDistributor.stakingContract()).to.equal(
-  //     mockStaking.address
-  //   );
-  //
-  //   expect(await rewardDistributor.stakedOrclAddress()).to.equal(
-  //     mockStakedOrcl.address
-  //   );
-  // });
-  //
-  // it("Check staking", async function () {
-  //   await mockStaking.setRewardDistributor(rewardDistributor.address);
-  //   expect(await mockStaking.getRewardDistributorAddress()).to.equal(
-  //     rewardDistributor.address
-  //   );
-  //
-  //   await mockOrcl.mint(deployer.address, constants.largeApproval);
-  //   await mockOrcl.approve(mockStaking.address, constants.largeApproval);
-  //
-  //   await mockStaking.stake(deployer.address, "400000000000000000000000");
-  //
-  //   await mockStaking.stake(deployer.address, "800000000000000000000000");
-  //
-  //   await rewardDistributor.completeRewardCycle(constants.initialMint);
-  // });
+  it("Check staking and stakedOrfi Address", async function () {
+    expect(await rewardDistributor.stakingContract()).to.equal(
+      mockStaking.address
+    );
+
+    expect(await rewardDistributor.stakedOrfiAddress()).to.equal(
+      mockStakedOrfi.address
+    );
+  });
+
+  it("Check staking", async function () {
+    await mockStaking.setRewardDistributor(rewardDistributor.address);
+    expect(await mockStaking.getRewardDistributorAddress()).to.equal(
+      rewardDistributor.address
+    );
+
+    await mockOrfi.mint(deployer.address, constants.largeApproval);
+    await mockOrfi.approve(mockStaking.address, constants.largeApproval);
+
+    await mockStaking.stake(deployer.address, "400000000000000000000000");
+
+    await mockStaking.stake(deployer.address, "800000000000000000000000");
+
+    await rewardDistributor.completeRewardCycle(constants.initialMint);
+  });
 
   it("Check redeem for a cycle", async function () {
-    console.log(rewardDistributor.address);
-
     await mockStaking.setRewardDistributor(rewardDistributor.address);
     await rewardDistributor.setTreasuryAddress(treasury.address);
     await rewardDistributor.setStableCoinAddress(mim.address);
@@ -114,29 +110,30 @@ describe("Reward Distributor", async () => {
       rewardDistributor.address
     );
 
-    await mockOrcl.mint(user1.address, constants.largeApproval);
-    await mockOrcl.connect(user1).approve(mockStaking.address, constants.largeApproval);
+    await mockOrfi.mint(user1.address, constants.largeApproval);
+    await mockOrfi.connect(user1).approve(mockStaking.address, constants.largeApproval);
 
     await mockStaking.connect(user1).stake(user1.address, "400000000000000000000000");
-
     await mockStaking.connect(user1).stake(user1.address, "800000000000000000000000");
 
+    delay(10000);
+
     await rewardDistributor.completeRewardCycle(constants.initialMint);
-
-    const rewardsForCycle = await rewardDistributor.connect(user1).rewardsForACycle(user1.address, 1);
-
-    expect(rewardsForCycle).to.gt(0);
+    //
+    const rewardsForCycle = await rewardDistributor.connect(user1).rewardsForACycle(user1.address, 2);
+    //
+    expect(parseFloat(rewardsForCycle)).to.gt(0);
 
   });
 
-  // it("Check complete reward cycle", async function () {
-  //   rewardAmount = constants.initialMint;
-  //   expect(await rewardDistributor.currentRewardCycle()).to.equal(2);
-  //
-  //   await rewardDistributor.completeRewardCycle(rewardAmount);
-  //   expect(await rewardDistributor.currentRewardCycle()).to.equal(3);
-  //   expect(await rewardDistributor.getTotalRewardsForCycle(1)).to.equal(
-  //     rewardAmount
-  //   );
-  // });
+  it("Check complete reward cycle", async function () {
+    rewardAmount = constants.initialMint;
+    expect(await rewardDistributor.currentRewardCycle()).to.equal(3);
+
+    await rewardDistributor.completeRewardCycle(rewardAmount);
+    expect(await rewardDistributor.currentRewardCycle()).to.equal(4);
+    expect(await rewardDistributor.getTotalRewardsForCycle(1)).to.equal(
+      rewardAmount
+    );
+  });
 });

@@ -5,7 +5,7 @@ interface ITreasury {
   function deposit(
     uint256 _amount,
     address _token,
-    uint256 _orclMinted
+    uint256 _orfiMinted
   ) external;
 
   function valueOfToken(address _token, uint256 _amount, bool isReserveToken, bool isLiquidToken)
