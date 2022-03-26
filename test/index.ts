@@ -1,8 +1,8 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { ORFI, RewardDistributor, StakedORFI, Staking } from "../typechain";
 import { constants } from "../scripts/constants";
+import { Contract } from "ethers";
 
 describe("Deploy ORFI", function () {
   it("Should check vault address", async function () {
@@ -279,10 +279,10 @@ describe("Staking Test", function () {
   // let staker: SignerWithAddress;
   const stakingAmount = "100000000000000000000";
   let stakingAddress: any;
-  let orfi: ORFI;
-  let sorfi: StakedORFI;
-  let staking: Staking;
-  let rewardDistributor: RewardDistributor;
+  let orfi: Contract;
+  let sorfi: Contract;
+  let staking: Contract;
+  let rewardDistributor: Contract;
 
   const delay = async (ms: number) => new Promise((res) => setTimeout(res, ms));
 
@@ -309,8 +309,13 @@ describe("Staking Test", function () {
     staking = await Staking.deploy(orfi.address, sorfi.address);
     await staking.deployed();
 
-    const RewardDistributor = await ethers.getContractFactory("RewardDistributor");
-    rewardDistributor = await RewardDistributor.deploy(staking.address, sorfi.address);
+    const RewardDistributor = await ethers.getContractFactory(
+      "RewardDistributor"
+    );
+    rewardDistributor = await RewardDistributor.deploy(
+      staking.address,
+      sorfi.address
+    );
     await rewardDistributor.deployed();
 
     staking.setRewardDistributor(rewardDistributor.address);
