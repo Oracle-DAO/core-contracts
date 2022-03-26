@@ -11,7 +11,7 @@ export class constants {
   public static bondVestingLength = "1200"; // 3 days times in second (3*24*3600)
   public static minBondPrice = "500000";
   public static maxBondPayout = "10000";
-  public static minBondPayout = "10000000000000000"; // 0.01 ORCL
+  public static minBondPayout = "10000000000000000"; // 0.01 ORFI
   public static bondFee = "5000";
   public static maxBondDebt = "1000000000000000000000000";
   public static adjustmentIncrement = "3";

@@ -1,10 +1,10 @@
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "../library/LowGasSafeMath.sol";
 
 import "../interface/IERC20.sol";
-import "hardhat/console.sol";
 
 contract ProjectManagement is Ownable{
 
@@ -133,7 +133,7 @@ contract ProjectManagement is Ownable{
         IERC20(_nttAddress).transfer(account_, amount);
     }
 
-    function checkPercentVested(address account_) public returns(uint32 percentVested_) {
+    function checkPercentVested(address account_) public view returns(uint32 percentVested_) {
         MemberInfo memory memberInfo = _tokenAllocation[account_];
         uint32 secondsSinceLast = uint32(block.timestamp).sub32(memberInfo.lastRedeemTime);
         if(secondsSinceLast >= memberInfo.vestingPeriod){

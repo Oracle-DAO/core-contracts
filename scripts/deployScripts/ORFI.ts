@@ -11,14 +11,14 @@ async function main() {
     await deployer.address
   );
 
-  const ORCL = await ethers.getContractFactory("ORCL");
-  const orcl = await ORCL.deploy();
-  await orcl.deployed();
+  const ORFI = await ethers.getContractFactory("ORFI");
+  const orfi = await ORFI.deploy();
+  await orfi.deployed();
 
-  console.log("Token address of orcl:", orcl.address);
+  console.log("Token address of orfi:", orfi.address);
 
   // We also save the contract's artifacts and address in the frontend directory
-  saveFrontendFiles(orcl, "ORCL");
+  saveFrontendFiles(orfi, "ORFI");
 }
 
 main().catch((error) => {

@@ -1,12 +1,10 @@
-//SPDX-License-Identifier: Unlicense
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-
-import "hardhat/console.sol";
 
 contract VaultOwned is Ownable {
     address internal _vault;
@@ -29,11 +27,11 @@ contract VaultOwned is Ownable {
     }
 }
 
-contract ORCL is  Context, VaultOwned, ERC20 {
+contract ORFI is  Context, VaultOwned, ERC20 {
 
     using SafeMath for uint256;
 
-    constructor() ERC20('Oracle', 'ORCL') {}
+    constructor() ERC20('Oracle', 'ORFI') {}
 
     function mint(address account, uint256 amount) external onlyVault {
         _mint(account, amount);

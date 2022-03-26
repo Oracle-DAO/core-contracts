@@ -7,11 +7,11 @@ async function main() {
 
   const treasuryAddress = readContractAddress("/Treasury.json");
   const mimAddress = readContractAddress("/MIM.json");
-  const orclAddress = readContractAddress("/ORCL.json");
+  const orfiAddress = readContractAddress("/ORFI.json");
 
   const Bond = await ethers.getContractFactory("Bond");
   const bond = await Bond.deploy(
-    orclAddress,
+    orfiAddress,
     mimAddress,
     treasuryAddress,
     MockDao.address

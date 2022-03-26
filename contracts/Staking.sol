@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
@@ -6,7 +6,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./interface/IERC20.sol";
 import "./library/SafeERC20.sol";
 
-import "hardhat/console.sol";
 import "./interface/IRewardDistributor.sol";
 
 contract Staking is Ownable {
@@ -36,8 +35,8 @@ contract Staking is Ownable {
 
   /* ========== STATE VARIABLES ========== */
 
-  IERC20 public immutable ORCL;
-  IERC20 public immutable sORCL;
+  IERC20 public immutable ORFI;
+  IERC20 public immutable sORFI;
   IRewardDistributor public rewardDistributor;
 
   mapping(address => Claim) public warmupInfo;
@@ -47,13 +46,13 @@ contract Staking is Ownable {
   /* ========== CONSTRUCTOR ========== */
 
   constructor(
-    address _orcl,
-    address _sorcl
+    address _orfi,
+    address _sorfi
   ) {
-    require(_orcl != address(0), "Zero address: ORCL");
-    ORCL = IERC20(_orcl);
-    require(_sorcl != address(0), "Zero address: sORCL");
-    sORCL = IERC20(_sorcl);
+    require(_orfi != address(0), "Zero address: ORFI");
+    ORFI = IERC20(_orfi);
+    require(_sorfi != address(0), "Zero address: sORFI");
+    sORFI = IERC20(_sorfi);
   }
 
   function setRewardDistributor(address rewardDistributor_) external {
@@ -63,7 +62,7 @@ contract Staking is Ownable {
   /* ========== MUTATIVE FUNCTIONS ========== */
 
   /**
-   * @notice stake ORCL to enter warmup
+   * @notice stake ORFI to enter warmup
      * @param _to address
      * @param _amount uint
      * @return uint
@@ -72,7 +71,7 @@ contract Staking is Ownable {
     address _to,
     uint256 _amount
   ) external returns (uint256) {
-    ORCL.safeTransferFrom(msg.sender, address(this), _amount);
+    ORFI.safeTransferFrom(msg.sender, address(this), _amount);
     if (warmupPeriod == 0) {
       _send(_to, _amount);
       rewardDistributor.stake(_to, _amount);
@@ -116,14 +115,14 @@ contract Staking is Ownable {
   }
 
   /**
-   * @notice forfeit stake and retrieve ORCL
+   * @notice forfeit stake and retrieve ORFI
    * @return uint
   */
   function forfeit() external returns (uint256) {
     Claim memory info = warmupInfo[msg.sender];
     delete warmupInfo[msg.sender];
     amountInWarmup = amountInWarmup.sub(info.deposit);
-    ORCL.safeTransfer(msg.sender, info.deposit);
+    ORFI.safeTransfer(msg.sender, info.deposit);
     return info.deposit;
   }
 
@@ -144,9 +143,9 @@ contract Staking is Ownable {
     address _to,
     uint256 _amount
   ) external returns (uint256 amount_) {
-    sORCL.burn(msg.sender, _amount);
-    require(_amount <= ORCL.balanceOf(address(this)), "Insufficient ORCL balance in contract");
-    ORCL.safeTransfer(_to, _amount);
+    sORFI.burn(msg.sender, _amount);
+    require(_amount <= ORFI.balanceOf(address(this)), "Insufficient ORFI balance in contract");
+    ORFI.safeTransfer(_to, _amount);
     rewardDistributor.unstake(_to, amount_);
     return _amount;
   }
@@ -154,7 +153,7 @@ contract Staking is Ownable {
   /* ========== INTERNAL FUNCTIONS ========== */
 
   /**
-   * @notice send staker their amount as sORCL
+   * @notice send staker their amount as sORFI
      * @param _to address
      * @param _amount uint
      */
@@ -162,7 +161,7 @@ contract Staking is Ownable {
     address _to,
     uint256 _amount
   ) internal returns (uint256) {
-      sORCL.mint(_to, _amount); // send as sORCL (equal unit as ORCL)
+      sORFI.mint(_to, _amount); // send as sORFI (equal unit as ORFI)
       return _amount;
   }
 
@@ -176,10 +175,10 @@ contract Staking is Ownable {
   }
 
   /**
-   * @notice ORCL balance present in contract
+   * @notice ORFI balance present in contract
    */
-  function contractORCLBalance() public view returns (uint256) {
-    return ORCL.balanceOf(address(this));
+  function contractORFIBalance() public view returns (uint256) {
+    return ORFI.balanceOf(address(this));
   }
 
   /* ========== MANAGERIAL FUNCTIONS ========== */

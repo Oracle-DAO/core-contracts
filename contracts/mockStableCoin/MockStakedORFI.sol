@@ -1,16 +1,18 @@
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-contract MockORCL is Ownable, ERC20 {
+
+contract MockStakedORFI is Ownable, ERC20 {
 
     using SafeMath for uint256;
 
-    constructor() ERC20('Oracle', 'ORCL') {}
+    constructor() ERC20('Staked Oracle', 'sORFI') {}
 
-    function mint(address account, uint256 amount) external onlyOwner {
+    function mint(address account, uint256 amount) external {
         _mint(account, amount);
     }
 

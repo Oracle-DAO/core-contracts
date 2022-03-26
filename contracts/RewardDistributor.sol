@@ -1,4 +1,4 @@
-//SPDX-License-Identifier: Unlicense
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
 import "./library/FixedPoint.sol";
@@ -7,11 +7,10 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./interface/IERC20.sol";
 import "./interface/ITreasury.sol";
 
-import "hardhat/console.sol";
 
 contract RewardDistributor is Ownable {
 
-    event RewardCycleCompleted(uint256 allocatedRewards, uint256 totalStakedOrcl, uint8 rewardCycle);
+    event RewardCycleCompleted(uint256 allocatedRewards, uint256 totalStakedOrfi, uint8 rewardCycle);
     event StakeBalanceUpdated(address indexed account, uint256 amount, uint256 averageTime);
     event UnstakeBalanceUpdated(address indexed account, uint256 amount, uint256 averageTime);
     event RedeemedRewards(address indexed account, uint256 amount, uint256 rewardCycle);
@@ -23,12 +22,12 @@ contract RewardDistributor is Ownable {
     struct RewardCycle {
         uint32 startTimestamp;
         uint32 endTimestamp;
-        uint256 totalStakedOrclAmount;
+        uint256 totalStakedOrfiAmount;
         uint256 totalAllocatedRewards;
     }
 
     struct UserStakeInfo {
-        uint256 stakedOrclAmount;
+        uint256 stakedOrfiAmount;
         uint32 averageInvestedTime;
         uint8 rewardCycle;
         bool redeemed;
@@ -40,7 +39,7 @@ contract RewardDistributor is Ownable {
     mapping(address => mapping(uint8 => UserStakeInfo)) public _userStakeInfoToRewardCycleMapping;
 
     address private _stakingContract;
-    address private _stakedOrclAddress;
+    address private _stakedOrfiAddress;
     address private _stableCoinAddress;
     address private _treasury;
 
@@ -51,14 +50,14 @@ contract RewardDistributor is Ownable {
         _;
     }
 
-    constructor(address stakingContract_, address stakedOrclAddress_) {
+    constructor(address stakingContract_, address stakedOrfiAddress_) {
         require(stakingContract_ != address(0));
-        require(stakedOrclAddress_ != address(0));
+        require(stakedOrfiAddress_ != address(0));
         currentRewardCycle = 1;
         _totalRewardsAllocated = 0;
         _rewardCycleMapping[currentRewardCycle].startTimestamp = uint32(block.timestamp);
         _stakingContract = stakingContract_;
-        _stakedOrclAddress = stakedOrclAddress_;
+        _stakedOrfiAddress = stakedOrfiAddress_;
     }
 
     function setStableCoinAddress(address stableCoinAddress_) external onlyOwner {
@@ -74,19 +73,20 @@ contract RewardDistributor is Ownable {
         RewardCycle memory rewardCycle = _rewardCycleMapping[currentRewardCycle];
         rewardCycle.endTimestamp = uint32(block.timestamp);
         rewardCycle.totalAllocatedRewards = rewardAmount;
-        rewardCycle.totalStakedOrclAmount = IERC20(_stakedOrclAddress).totalSupply();
+        rewardCycle.totalStakedOrfiAmount = IERC20(_stakedOrfiAddress).totalSupply();
         _rewardCycleMapping[currentRewardCycle] = rewardCycle;
-        emit RewardCycleCompleted(rewardAmount, rewardCycle.totalStakedOrclAmount, currentRewardCycle);
+        emit RewardCycleCompleted(rewardAmount, rewardCycle.totalStakedOrfiAmount, currentRewardCycle);
         currentRewardCycle++;
         _totalRewardsAllocated += rewardAmount;
+        _rewardCycleMapping[currentRewardCycle].startTimestamp = uint32(block.timestamp);
     }
 
     function stake(address to_, uint256 amount) external onlyStakingContract {
-        updateStakeOrclBalance(to_, amount, true);
+        updateStakeOrfiBalance(to_, amount, true);
     }
 
     function unstake(address to_, uint256 amount) external onlyStakingContract {
-        updateStakeOrclBalance(to_, amount, false);
+        updateStakeOrfiBalance(to_, amount, false);
     }
 
     function redeemTotalRewardsForUser(address account_) external {
@@ -112,28 +112,28 @@ contract RewardDistributor is Ownable {
 
         UserStakeInfo memory userStakeInfo = _userStakeInfoToRewardCycleMapping[account_][rewardCycle_];
         require(!userStakeInfo.redeemed, "User Has already Redeemed");
-        require(userStakeInfo.stakedOrclAmount > 0, "Staked Amount is 0");
+        require(userStakeInfo.stakedOrfiAmount > 0, "Staked Amount is 0");
         RewardCycle memory rewardCycle = _rewardCycleMapping[rewardCycle_];
         uint32 cycleLength = rewardCycle.endTimestamp.sub32(rewardCycle.startTimestamp);
 
         uint256 investedTimeInCycle = averageTimeInCycle(cycleLength, userStakeInfo.averageInvestedTime);
-        uint256 stakedOrclPortion = calculateStakeOrclPortion(userStakeInfo.stakedOrclAmount, rewardCycle.totalStakedOrclAmount);
+        uint256 stakedOrfiPortion = calculateStakeOrfiPortion(userStakeInfo.stakedOrfiAmount, rewardCycle.totalStakedOrfiAmount);
 
-        return calculateRewards(investedTimeInCycle, stakedOrclPortion, rewardCycle.totalAllocatedRewards);
+        return calculateRewards(investedTimeInCycle, stakedOrfiPortion, rewardCycle.totalAllocatedRewards);
     }
 
-    function updateStakeOrclBalance(address to_, uint256 amount, bool isStake) internal returns(uint256){
+    function updateStakeOrfiBalance(address to_, uint256 amount, bool isStake) internal returns(uint256){
         UserStakeInfo memory userStakeInfo = _userStakeInfoToRewardCycleMapping[to_][currentRewardCycle];
         if(isStake) {
             uint256 tAVG = calculateAverageTime
             (
                 userStakeInfo.averageInvestedTime,
                 _rewardCycleMapping[currentRewardCycle].startTimestamp,
-                userStakeInfo.stakedOrclAmount,
+                userStakeInfo.stakedOrfiAmount,
                 amount
             );
             userStakeInfo.averageInvestedTime = uint32(tAVG.div(1e18));
-            userStakeInfo.stakedOrclAmount = userStakeInfo.stakedOrclAmount.add(amount);
+            userStakeInfo.stakedOrfiAmount = userStakeInfo.stakedOrfiAmount.add(amount);
             userStakeInfo.rewardCycle = currentRewardCycle;
             _userStakeInfoToRewardCycleMapping[to_][currentRewardCycle] = userStakeInfo;
 
@@ -141,9 +141,9 @@ contract RewardDistributor is Ownable {
             return tAVG;
         }
         else {
-            userStakeInfo.stakedOrclAmount = userStakeInfo.stakedOrclAmount.sub(amount);
+            userStakeInfo.stakedOrfiAmount = userStakeInfo.stakedOrfiAmount.sub(amount);
             _userStakeInfoToRewardCycleMapping[to_][currentRewardCycle] = userStakeInfo;
-            if(userStakeInfo.stakedOrclAmount == 0){
+            if(userStakeInfo.stakedOrfiAmount == 0){
                 delete _userStakeInfoToRewardCycleMapping[to_][currentRewardCycle];
             }
             emit UnstakeBalanceUpdated(to_, amount, userStakeInfo.averageInvestedTime);
@@ -151,36 +151,36 @@ contract RewardDistributor is Ownable {
         }
     }
 
-    function calculateAverageTime(uint32 tAVG, uint32 rewardCycleStartTime, uint256 stakedOrclAmount, uint256 amount) internal view returns(uint256){
-        uint256 stakeTimeValue = tAVG.mul(stakedOrclAmount);
+    function calculateAverageTime(uint32 tAVG, uint32 rewardCycleStartTime, uint256 stakedOrfiAmount, uint256 amount) internal view returns(uint256){
+        uint256 stakeTimeValue = tAVG.mul(stakedOrfiAmount);
         uint256 stakingTime = block.timestamp.sub(rewardCycleStartTime);
         uint256 currentStakeTimeValue = amount.mul(stakingTime);
         uint256 totalStakeTimeValue = stakeTimeValue.add(currentStakeTimeValue);
-        return calculateAverageTime(totalStakeTimeValue, stakedOrclAmount.add(amount));
+        return calculateAverageTime(totalStakeTimeValue, stakedOrfiAmount.add(amount));
     }
 
-    function averageTimeInCycle(uint256 cycleLength, uint256 averageInvestedTime) internal view returns(uint256) {
+    function averageTimeInCycle(uint256 cycleLength, uint256 averageInvestedTime) internal pure returns(uint256) {
         return (FixedPoint.fraction(cycleLength.sub(averageInvestedTime), cycleLength).decode112with18() / 1e15).mul(1e15);
     }
 
-    function calculateStakeOrclPortion(uint256 stakeOrclAmount, uint256 totalStakedOrclAmount) internal view returns(uint256) {
-        return (FixedPoint.fraction(stakeOrclAmount, totalStakedOrclAmount).decode112with18() / 1e15).mul(1e15);
+    function calculateStakeOrfiPortion(uint256 stakeOrfiAmount, uint256 totalStakedOrfiAmount) internal pure returns(uint256) {
+        return (FixedPoint.fraction(stakeOrfiAmount, totalStakedOrfiAmount).decode112with18() / 1e15).mul(1e15);
     }
 
-    function calculateAverageTime(uint256 totalStakeTimeValue, uint256 totalStakedOrclAmount) internal view returns(uint256) {
-        return (FixedPoint.fraction(totalStakeTimeValue, totalStakedOrclAmount).decode112with18() / 1e15).mul(1e15);
+    function calculateAverageTime(uint256 totalStakeTimeValue, uint256 totalStakedOrfiAmount) internal pure returns(uint256) {
+        return (FixedPoint.fraction(totalStakeTimeValue, totalStakedOrfiAmount).decode112with18() / 1e15).mul(1e15);
     }
 
-    function calculateRewards(uint256 investedTime, uint256 stakedOrclPortion, uint256 totalRewards) internal pure returns(uint256) {
-        return (investedTime.mul(stakedOrclPortion).mul(totalRewards)).div(1e36);
+    function calculateRewards(uint256 investedTime, uint256 stakedOrfiPortion, uint256 totalRewards) internal pure returns(uint256) {
+        return (investedTime.mul(stakedOrfiPortion).mul(totalRewards)).div(1e36);
     }
 
     function stakingContract() external view returns(address) {
         return _stakingContract;
     }
 
-    function stakedOrclAddress() external view returns(address) {
-        return _stakedOrclAddress;
+    function stakedOrfiAddress() external view returns(address) {
+        return _stakedOrfiAddress;
     }
 
     function getTotalRewardsForCycle(uint8 rewardCycleId) external view returns(uint256) {

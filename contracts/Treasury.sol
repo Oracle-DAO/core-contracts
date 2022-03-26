@@ -7,22 +7,19 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "./interface/ITreasuryHelper.sol";
 import "./interface/IBondCalculator.sol";
 import "./interface/ITAVCalculator.sol";
-import "./interface/IORCL.sol";
+import "./interface/IORFI.sol";
 import "./interface/IERC20.sol";
 
 import "./library/SafeERC20.sol";
 import "./library/FixedPoint.sol";
-
-import "hardhat/console.sol";
-
 
 contract Treasury is Ownable {
     using FixedPoint for *;
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
-    event Deposit(address indexed token, uint256 amount, uint256 orclMinted);
-    event Withdrawal(address indexed token, uint256 amount, uint256 orclBurned);
+    event Deposit(address indexed token, uint256 amount, uint256 orfiMinted);
+    event Withdrawal(address indexed token, uint256 amount, uint256 orfiBurned);
     event CreateDebt(
         address indexed debtor,
         address indexed token,
@@ -39,8 +36,8 @@ contract Treasury is Ownable {
 
     event ReservesUpdated(uint256 indexed totalReserves);
 
-    address public immutable ORCL;
-    address public sORCL;
+    address public immutable ORFI;
+    address public sORFI;
     address public tavCalculator;
     address public treasuryHelper;
     address public auditOwner;
@@ -50,18 +47,18 @@ contract Treasury is Ownable {
     mapping(address => uint256) public debtorBalance;
 
     uint256 private _totalReserves; // Risk-free value of all assets
-    uint256 private _totalORCLMinted; // total orcl minted
+    uint256 private _totalORFIMinted; // total orfi minted
     uint256 private _totalDebt;
 
-    constructor(address _ORCL, address _treasuryHelper) {
-        require(_ORCL != address(0));
-        ORCL = _ORCL;
+    constructor(address _ORFI, address _treasuryHelper) {
+        require(_ORFI != address(0));
+        ORFI = _ORFI;
         require(_treasuryHelper != address(0));
         treasuryHelper = _treasuryHelper;
     }
 
-    function setStakedORCL(address _sORCL) external onlyOwner {
-        sORCL = _sORCL;
+    function setStakedORFI(address _sORFI) external onlyOwner {
+        sORFI = _sORFI;
     }
 
     function setTAVCalculator(address _tavCalculator) external onlyOwner {
@@ -72,12 +69,12 @@ contract Treasury is Ownable {
     @notice allow approved address to deposit an asset for OHM
         @param _amount uint
         @param _token address
-        @param _orclAmount uint
+        @param _orfiAmount uint
      */
     function deposit(
         uint256 _amount,
         address _token,
-        uint256 _orclAmount
+        uint256 _orfiAmount
     ) external {
         bool isReserveToken = ITreasuryHelper(treasuryHelper).isReserveToken(_token);
         bool isLiquidityToken = ITreasuryHelper(treasuryHelper).isLiquidityToken(_token);
@@ -93,12 +90,12 @@ contract Treasury is Ownable {
             require(ITreasuryHelper(treasuryHelper).isLiquidityDepositor(msg.sender), 'NAPPROVED');
         }
 
-        _totalORCLMinted = _totalORCLMinted.add(_orclAmount);
-        IORCL(ORCL).mint(msg.sender, _orclAmount);
+        _totalORFIMinted = _totalORFIMinted.add(_orfiAmount);
+        IORFI(ORFI).mint(msg.sender, _orfiAmount);
 
         emit ReservesUpdated(_totalReserves);
 
-        emit Deposit(_token, _amount, _orclAmount);
+        emit Deposit(_token, _amount, _orfiAmount);
     }
 
     /**
@@ -111,17 +108,17 @@ contract Treasury is Ownable {
         require(ITreasuryHelper(treasuryHelper).isReserveToken(_token), 'NA');
         require(ITreasuryHelper(treasuryHelper).isReserveSpender(msg.sender), 'NApproved');
 
-        uint256 orclToBurn = orclEqValue(valueOfToken(_token, _amount, true, false));
+        uint256 orfiToBurn = orfiEqValue(valueOfToken(_token, _amount, true, false));
 
-        IORCL(ORCL).burnFrom(msg.sender, orclToBurn);
+        IORFI(ORFI).burnFrom(msg.sender, orfiToBurn);
 
-        _totalORCLMinted = _totalORCLMinted.sub(orclToBurn);
+        _totalORFIMinted = _totalORFIMinted.sub(orfiToBurn);
         _totalReserves = _totalReserves.sub(_amount);
         emit ReservesUpdated(_totalReserves);
 
         IERC20(_token).safeTransfer(msg.sender, _amount);
 
-        emit Withdrawal(_token, _amount, orclToBurn);
+        emit Withdrawal(_token, _amount, orfiToBurn);
     }
 
     /**
@@ -133,21 +130,21 @@ contract Treasury is Ownable {
         require(ITreasuryHelper(treasuryHelper).isDebtor(msg.sender), 'NApproved');
         require(ITreasuryHelper(treasuryHelper).isReserveToken(_token), 'NA');
 
-        uint256 orclForDebt = orclEqValue(valueOfToken(_token, _amount, true, false));
+        uint256 orfiForDebt = orfiEqValue(valueOfToken(_token, _amount, true, false));
 
-        uint256 maximumDebt = IERC20(sORCL).balanceOf(msg.sender); // Can only borrow against sOHM held
+        uint256 maximumDebt = IERC20(sORFI).balanceOf(msg.sender); // Can only borrow against sOHM held
         uint256 availableDebt = maximumDebt.sub(debtorBalance[msg.sender]);
-        require(orclForDebt <= availableDebt, 'Exceeds debt limit');
+        require(orfiForDebt <= availableDebt, 'Exceeds debt limit');
 
-        debtorBalance[msg.sender] = debtorBalance[msg.sender].add(orclForDebt);
-        _totalDebt = _totalDebt.add(orclForDebt);
+        debtorBalance[msg.sender] = debtorBalance[msg.sender].add(orfiForDebt);
+        _totalDebt = _totalDebt.add(orfiForDebt);
 
         _totalReserves = _totalReserves.sub(_amount);
         emit ReservesUpdated(_totalReserves);
 
         IERC20(_token).transfer(msg.sender, _amount);
 
-        emit CreateDebt(msg.sender, _token, _amount, orclForDebt);
+        emit CreateDebt(msg.sender, _token, _amount, orfiForDebt);
     }
 
     /**
@@ -162,13 +159,13 @@ contract Treasury is Ownable {
         _totalReserves = _totalReserves.add(_amount);
         IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
 
-        uint256 debtORCLRepaid = orclEqValue(valueOfToken(_token, _amount, true, false));
-        debtorBalance[msg.sender] = debtorBalance[msg.sender].sub(debtORCLRepaid);
-        _totalDebt = _totalDebt.sub(debtORCLRepaid);
+        uint256 debtORFIRepaid = orfiEqValue(valueOfToken(_token, _amount, true, false));
+        debtorBalance[msg.sender] = debtorBalance[msg.sender].sub(debtORFIRepaid);
+        _totalDebt = _totalDebt.sub(debtORFIRepaid);
 
         emit ReservesUpdated(_totalReserves);
 
-        emit RepayDebt(msg.sender, _token, _amount, debtORCLRepaid);
+        emit RepayDebt(msg.sender, _token, _amount, debtORFIRepaid);
     }
 
     /**
@@ -182,8 +179,6 @@ contract Treasury is Ownable {
         if (isLPToken) {
             require(ITreasuryHelper(treasuryHelper).isLiquidityManager(msg.sender), 'NApproved');
         }
-        console.log("is reserve Token", isReserveToken);
-        console.log("msg.sender is", msg.sender);
 
         if (isReserveToken) {
             require(ITreasuryHelper(treasuryHelper).isReserveManager(msg.sender), 'NApproved');
@@ -196,7 +191,7 @@ contract Treasury is Ownable {
     }
 
     /**
-    @notice returns ORCL valuation of asset
+    @notice returns ORFI valuation of asset
         @param _token address
         @param _amount uint
         @return value_ uint
@@ -208,14 +203,15 @@ contract Treasury is Ownable {
     {
         if (isReserveToken) {
             // convert amount to match OHM decimals
-            value_ = _amount.mul(10**IERC20(ORCL).decimals()).div(10**IERC20(_token).decimals());
+            value_ = _amount.mul(10**IERC20(ORFI).decimals()).div(10**IERC20(_token).decimals());
         } else if (isLiquidToken) {
             value_ = IBondCalculator(bondCalculator[_token]).valuation(_token, _amount);
         }
     }
 
-    function orclEqValue(uint256 _amount)
+    function orfiEqValue(uint256 _amount)
     public
+    view
     returns (uint256 value_)
     {
         uint256 tav_= ITAVCalculator(tavCalculator).calculateTAV().mul(1e9);
@@ -226,7 +222,7 @@ contract Treasury is Ownable {
         return _totalReserves;
     }
 
-    function totalORCLMinted() external view returns(uint256) {
-        return _totalORCLMinted;
+    function totalORFIMinted() external view returns(uint256) {
+        return _totalORFIMinted;
     }
 }

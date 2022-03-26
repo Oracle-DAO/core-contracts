@@ -9,14 +9,14 @@ import { constants } from "./constants";
 async function main() {
   const [deployer, DAO] = await ethers.getSigners();
 
-  const orcl = await ethers.getContractFactory("ORCL");
-  const orclContract = await orcl.deploy();
+  const orfi = await ethers.getContractFactory("ORFI");
+  const orfiContract = await orfi.deploy();
 
-  await orclContract.deployed();
+  await orfiContract.deployed();
 
-  const StakedORCL = await ethers.getContractFactory("StakedORCL");
-  const sORCLContract = await StakedORCL.deploy();
-  await sORCLContract.deployed();
+  const StakedORFI = await ethers.getContractFactory("StakedORFI");
+  const sORFIContract = await StakedORFI.deploy();
+  await sORFIContract.deployed();
 
   // Only Needed for mock.
   const MIM = await ethers.getContractFactory("MIM");
@@ -25,14 +25,14 @@ async function main() {
 
   const Staking = await ethers.getContractFactory("Staking");
   const stakingContract = await Staking.deploy(
-    orclContract.address,
-    sORCLContract.address
+    orfiContract.address,
+    sORFIContract.address
   );
   await stakingContract.deployed();
 
   const TreasuryHelper = await ethers.getContractFactory("TreasuryHelper");
   const treasuryHelper = await TreasuryHelper.deploy(
-    orclContract.address,
+    orfiContract.address,
     mim.address,
     constants.blockNeededToWait
   );
@@ -40,21 +40,21 @@ async function main() {
 
   const Treasury = await ethers.getContractFactory("Treasury");
   const treasury = await Treasury.deploy(
-    orclContract.address,
+    orfiContract.address,
     treasuryHelper.address
   );
   await treasury.deployed();
 
   const TAVCalculator = await ethers.getContractFactory("TAVCalculator");
   const tavCalculator = await TAVCalculator.deploy(
-    orclContract.address,
+    orfiContract.address,
     treasury.address
   );
   await tavCalculator.deployed();
 
   const Bond = await ethers.getContractFactory("Bond");
   const bond = await Bond.deploy(
-    orclContract.address,
+    orfiContract.address,
     mim.address,
     treasury.address,
     DAO.address,
@@ -72,9 +72,9 @@ async function main() {
     constants.bondVestingLength
   );
 
-  await orclContract.setVault(treasury.address);
+  await orfiContract.setVault(treasury.address);
 
-  await sORCLContract.initialize(stakingContract.address);
+  await sORFIContract.initialize(stakingContract.address);
 
   // bond depository address will go here
   await treasuryHelper.queue("0", bond.address);
@@ -82,7 +82,7 @@ async function main() {
   // bond depository address will go here
   await treasuryHelper.toggle("0", bond.address, constants.zeroAddress);
 
-  // reserve spender address will go here. They will burn ORCL
+  // reserve spender address will go here. They will burn ORFI
   await treasuryHelper.queue("1", deployer.address);
 
   // reserve spender address will go here
@@ -100,8 +100,8 @@ async function main() {
   // approve large number for treasury, so that it can transfer token as spender
   await mim.approve(bond.address, constants.largeApproval);
 
-  // approve treasury address for a user so that treasury can burn orcl for user
-  await orclContract.approve(treasury.address, constants.largeApproval);
+  // approve treasury address for a user so that treasury can burn orfi for user
+  await orfiContract.approve(treasury.address, constants.largeApproval);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

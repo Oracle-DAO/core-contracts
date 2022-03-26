@@ -5,12 +5,12 @@ import { constants } from "../constants";
 
 async function main() {
   // ethers is avaialble in the global scope
-  const orclAddress = readContractAddress("/ORCL.json");
+  const orfiAddress = readContractAddress("/ORFI.json");
   const treasuryAddress = readContractAddress("/Treasury.json");
 
   const TAVCalculator = await ethers.getContractFactory("TAVCalculator");
   const tavCalculator = await TAVCalculator.deploy(
-    orclAddress,
+    orfiAddress,
     treasuryAddress
   );
   await tavCalculator.deployed();

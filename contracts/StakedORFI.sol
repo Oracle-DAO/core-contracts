@@ -1,4 +1,4 @@
-//SPDX-License-Identifier: Unlicense
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-contract StakedORCL is Context, ERC20{
+contract StakedORFI is Context, ERC20{
     using SafeMath for uint256;
 
     address public stakingContract;
@@ -19,7 +19,7 @@ contract StakedORCL is Context, ERC20{
         _;
     }
 
-    constructor() ERC20('Staked Oracle', 'sORCL') {
+    constructor() ERC20('Staked Oracle', 'sORFI') {
         initializer = msg.sender;
     }
 

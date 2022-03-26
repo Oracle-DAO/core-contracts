@@ -5,12 +5,12 @@ import { constants } from "../constants";
 
 async function main() {
   // ethers is avaialble in the global scope
-  const orclAddress = readContractAddress("/ORCL.json");
+  const orfiAddress = readContractAddress("/ORFI.json");
   const mimAddress = readContractAddress("/mim.json");
 
   const TreasuryHelper = await ethers.getContractFactory("TreasuryHelper");
   const treasuryHelper = await TreasuryHelper.deploy(
-    orclAddress,
+    orfiAddress,
     mimAddress,
     constants.blockNeededToWait
   );
