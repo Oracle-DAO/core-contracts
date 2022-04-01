@@ -95,7 +95,7 @@ contract ProjectManagement is Ownable{
             });
 
             emit TeamTokenRedeemed(account_, payout, _tokenAllocation[account_].payout);
-            return send(account_, payout);
+            send(account_, payout);
         }
     }
 
@@ -126,7 +126,7 @@ contract ProjectManagement is Ownable{
         _totalRemainingTeamTokens += memberInfo.payout.sub(payout);
         delete _tokenAllocation[account_];
         emit BlacklistedMember(account_, payout);
-        return send(account_, payout);
+        send(account_, payout);
     }
 
     function send(address account_, uint256 amount) internal {
