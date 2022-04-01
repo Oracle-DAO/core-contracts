@@ -12,22 +12,9 @@ async function main() {
   const ProjectManagement = await ethers.getContractFactory(
     "ProjectManagement"
   );
-  const projectManagement = await ProjectManagement.deploy(ntt.address, {
-    gasPrice: 110000000000,
-  });
+  const projectManagement = await ProjectManagement.deploy(ntt.address);
   await projectManagement.deployed();
 
-  // const ProjectManagement = await ethers.getContractFactory("ProjectManagement");
-  // const projectManagement = await ProjectManagement.attach(NTTAdd);
-
-  console.log("Address of project Management:", projectManagement.address);
-  await ntt.approveAddressForTransfer(projectManagement.address, {
-    gasPrice: 110000000000,
-  });
-
-  await ntt.mint(projectManagement.address, "1500000000000000000000000", {
-    gasPrice: 110000000000,
-  });
   // We also save the contract's artifacts and address in the frontend directory
   saveFrontendFiles(projectManagement, "ProjectManagement");
 }

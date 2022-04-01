@@ -17,14 +17,10 @@ async function main() {
     ProjectManagementAdd
   );
 
-  await ntt.approveAddressForTransfer(projectManagement.address, {
-    gasPrice: 110000000000,
-  });
+  await ntt.approveAddressForTransfer(projectManagement.address);
   console.log("projectManagement approved for txn");
 
-  await ntt.mint(projectManagement.address, "1500000000000000000000000", {
-    gasPrice: 110000000000,
-  });
+  await ntt.mint(projectManagement.address, "1500000000000000000000000");
   console.log("projectManagement allotted tokens");
 
 }

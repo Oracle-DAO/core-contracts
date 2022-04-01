@@ -6,7 +6,7 @@ async function main() {
   const [deployer] = await ethers.getSigners();
 
   const NTT = await ethers.getContractFactory("NTT");
-  const ntt = await NTT.deploy({ gasPrice: 110000000000 });
+  const ntt = await NTT.deploy();
   await ntt.deployed();
 
   console.log("Address of ntt:", ntt.address);
