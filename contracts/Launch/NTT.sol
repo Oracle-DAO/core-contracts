@@ -23,19 +23,22 @@ contract NTT is  Context, Ownable, ERC20 {
     constructor() ERC20('Oracle NTT', 'nORFI') {
         redeemable = false;
         transferApprovedAddress[msg.sender] = true;
-        totalNTTSupply = 5*1e24;
+        totalNTTSupply = 45*1e23;
         totalNTTMinted = 0;
     }
 
     function approveAddressForTransfer(address account_) external onlyOwner {
+        require(account_ != address(0));
         transferApprovedAddress[account_] = true;
     }
 
     function removeAddressForTransfer(address account_) external onlyOwner {
+        require(account_ != address(0));
         transferApprovedAddress[account_] = false;
     }
 
     function setOrfiAddress(address orfiAddress_) external onlyOwner {
+        require(orfiAddress_ != address(0));
         orfiAddress = orfiAddress_;
     }
 
@@ -65,8 +68,8 @@ contract NTT is  Context, Ownable, ERC20 {
 
         totalOrfiRedeemed += amount_;
 
-        IERC20(orfiAddress).transfer(msg.sender, amount_);
         emit Redeemed(msg.sender, amount_);
+        IERC20(orfiAddress).transfer(msg.sender, amount_);
     }
 
     function toggleRedeemFlag() external onlyOwner {
