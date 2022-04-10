@@ -17,7 +17,7 @@ contract VaultOwned is Ownable {
         emit VaultTransferred(_vault);
     }
 
-    function vault() public view returns (address) {
+    function vault() external view returns (address) {
         return _vault;
     }
 

@@ -98,7 +98,7 @@ contract Staking is Ownable {
      * @param _to address
      * @return uint
      */
-  function claim(address _to) public returns (uint256) {
+  function claim(address _to) external returns (uint256) {
     Claim memory info = warmupInfo[_to];
 
     if (!info.lock) {
@@ -170,14 +170,14 @@ contract Staking is Ownable {
   /**
    * @notice total supply in warmup
      */
-  function supplyInWarmup() public view returns (uint256) {
+  function supplyInWarmup() external view returns (uint256) {
     return amountInWarmup;
   }
 
   /**
    * @notice ORFI balance present in contract
    */
-  function contractORFIBalance() public view returns (uint256) {
+  function contractORFIBalance() external view returns (uint256) {
     return ORFI.balanceOf(address(this));
   }
 

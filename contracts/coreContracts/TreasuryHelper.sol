@@ -5,16 +5,15 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "../interface/IBondCalculator.sol";
 import "../interface/IERC20.sol";
-
-interface ITreasury {
-    function setTotalReserve(uint256 _totalReserve) external;
-}
+import "../library/SafeERC20.sol";
+import "../interface/ITreasury.sol";
 
 contract TreasuryHelper is Ownable {
     using SafeMath for uint256;
+    using SafeERC20 for IERC20;
 
     address public immutable ORFI;
-    address public treasuryAddress;
+    ITreasury public treasury;
 
     event ChangeQueued(MANAGING indexed managing, address queued);
     event ChangeActivated(
@@ -86,41 +85,19 @@ contract TreasuryHelper is Ownable {
         address _MIM,
         uint256 _blocksNeededForQueue
     ) {
+        require(_ORFI != address(0));
         ORFI = _ORFI;
+
+        require(_MIM != address(0));
         reserveTokens.push(_MIM);
+
         isReserveToken[_MIM] = true;
         blocksNeededForQueue = _blocksNeededForQueue;
     }
 
-    function setTreasuryAddress(address _treasuryAddress) public onlyOwner {
-        treasuryAddress = _treasuryAddress;
-    }
-
-    /**
-    @notice takes inventory of all tracked assets
-        @notice always consolidate to recognized reserves before audit
-     */
-    function auditReserves() external onlyOwner {
-        uint256 reserves;
-        for (uint256 i = 0; i < reserveTokens.length; i++) {
-            reserves = reserves.add(
-                valueOfToken(
-                    reserveTokens[i],
-                    IERC20(reserveTokens[i]).balanceOf(address(this))
-                )
-            );
-        }
-        for (uint256 i = 0; i < liquidityTokens.length; i++) {
-            reserves = reserves.add(
-                valueOfToken(
-                    liquidityTokens[i],
-                    IERC20(liquidityTokens[i]).balanceOf(address(this))
-                )
-            );
-        }
-        ITreasury(treasuryAddress).setTotalReserve(reserves);
-        emit ReservesUpdated(reserves);
-        emit ReservesAudited(reserves);
+    function setTreasuryAddress(address _treasuryAddress) external onlyOwner {
+        require(_treasuryAddress != address(0));
+        treasury = ITreasury(_treasuryAddress);
     }
 
     /**
@@ -342,7 +319,7 @@ contract TreasuryHelper is Ownable {
         @param _amount uint
         @return value_ uint
      */
-    function valueOfToken(address _token, uint256 _amount) public view returns (uint256 value_) {
+    function valueOfToken(address _token, uint256 _amount) external view returns (uint256 value_) {
         if (isReserveToken[_token]) {
             // convert amount to match OHM decimals
             value_ = _amount.mul(10**IERC20(ORFI).decimals()).div(10**IERC20(_token).decimals());

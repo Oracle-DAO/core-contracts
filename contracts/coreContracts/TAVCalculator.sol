@@ -21,6 +21,8 @@ contract TAVCalculator {
         assetManagers.push(_treasury);
     }
 
+    // TODO Add events and documentation
+
     function calculateTAV() external view returns (uint256 _TAV) {
         uint256 orfiTotalSupply = ORFI.totalSupply();
         uint256 totalReserve = 0;
