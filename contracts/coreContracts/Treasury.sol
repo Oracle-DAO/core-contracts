@@ -8,7 +8,6 @@ import "../interface/ITreasuryHelper.sol";
 import "../interface/IBondCalculator.sol";
 import "../interface/ITAVCalculator.sol";
 import "../interface/IORFI.sol";
-import "../interface/IERC20.sol";
 
 import "../library/SafeERC20.sol";
 import "../library/FixedPoint.sol";
