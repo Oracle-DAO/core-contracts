@@ -12,7 +12,7 @@ import "../library/FixedPoint.sol";
 import "../library/SafeERC20.sol";
 import "../library/LowGasSafeMath.sol";
 import "../interface/IStaking.sol";
-
+import "hardhat/console.sol";
 
 contract Bond is Ownable {
     using FixedPoint for *;
@@ -59,6 +59,7 @@ contract Bond is Ownable {
         uint256 minimumPrice; // vs principle value
         uint256 maxPayout; // in thousandths of a %. i.e. 500 = 0.5%
         uint256 fee; // as % of bond payout, in hundreths. ( 500 = 5% = 0.05 for every 1 paid)
+        uint256 bondingRewardFee; // as % of bond payout, in hundreths. ( 500 = 5% = 0.05 for every 1 paid)
         uint256 maxDebt; // 9 decimal debt ratio, max % total supply created as debt
         uint32 vestingTerm; // in seconds
         uint256 minimumPayout; // minimum ORFI that needs to be bonded for
@@ -88,7 +89,8 @@ contract Bond is Ownable {
         FEE,
         DEBT,
         MINPRICE,
-        MIN_PAYOUT
+        MIN_PAYOUT,
+        BONDING_FEE
     }
 
     /* ======== STATE VARIABLES ======== */
@@ -108,6 +110,7 @@ contract Bond is Ownable {
 
     uint256 public totalDebt; // total value of outstanding bonds; used for pricing
     uint32 public lastDecay; // reference time for debt decay
+    uint256 public bondingReward;
 
     /* ======== INITIALIZATION ======== */
 
@@ -144,6 +147,7 @@ contract Bond is Ownable {
         uint256 _maxPayout,
         uint256 _minPayout,
         uint256 _fee,
+        uint256 _bondingRewardFee,
         uint256 _maxDebt,
         uint32 _vestingTerm
     ) external onlyOwner {
@@ -152,11 +156,13 @@ contract Bond is Ownable {
         require(_maxPayout <= 10000, 'Payout cannot be above 1 percent');
         require(_vestingTerm >= 10, 'Vesting must be longer than 36 hours');
         require(_fee <= 10000, 'DAO fee cannot exceed payout');
+        require(_bondingRewardFee <= 10000, 'Bonding reward fee cannot be above 10%');
         terms = Terms({
             controlVariable: _controlVariable,
             minimumPrice: _minimumPrice,
             maxPayout: _maxPayout,
             fee: _fee,
+            bondingRewardFee: _bondingRewardFee,
             maxDebt: _maxDebt,
             vestingTerm: _vestingTerm,
             minimumPayout: _minPayout
@@ -190,6 +196,9 @@ contract Bond is Ownable {
         } else if (_parameter == PARAMETER.MIN_PAYOUT) {
             // 5
             terms.minimumPayout = _input;
+        } else if (_parameter == PARAMETER.BONDING_FEE) {
+            // 5
+            terms.bondingRewardFee = _input;
         }
         emit LogSetTerms(_parameter, _input);
     }
@@ -249,13 +258,17 @@ contract Bond is Ownable {
         require(msg.sender == _depositor, 'LFNA');
         decayDebt();
 
+        // convert stablecoin decimals to 18 equivalent
+        uint256 amount = convertInto18DecimalsEquivalent(_amount);
+
         uint256 priceInUSD = bondPriceInUSD(); // Stored in bond info
+        bondingReward = bondingReward.add(calculateBondingReward()); // calculate bonding rewards
 
         require(_maxPrice >= priceInUSD, 'Slippage limit: more than max price'); // slippage protection
 
-        uint256 payout = payoutFor(_amount); // payout to bonder is computed in 1e18
+        uint256 payout = payoutFor(amount); // payout to bonder is computed in 1e18
 
-        require(totalDebt.add(_amount) <= terms.maxDebt, 'Max capacity reached');
+        require(totalDebt.add(amount) <= terms.maxDebt, 'Max capacity reached');
         require(payout >= minPayout(), 'Bond too small'); // must be > 0.01 ORFI ( underflow protection )
         require(payout <= maxPayout(), 'Bond too large'); // size protection because there is no slippage
 
@@ -263,11 +276,11 @@ contract Bond is Ownable {
         uint256 fee = payout.mul(terms.fee) / 100000;
         uint256 orfiToMint = payout.add(fee);
 
-        principle.safeTransferFrom(msg.sender, address(this), _amount);
-        treasury.deposit(_amount, address(principle), orfiToMint);
+        principle.safeTransferFrom(msg.sender, address(this), amount);
+        treasury.deposit(amount, address(principle), orfiToMint);
 
         if (fee != 0) {
-            // fee is transferred to dao
+            // fee is transferred to team
             ORFI.safeTransfer(DAO, fee);
         }
 
@@ -400,9 +413,19 @@ contract Bond is Ownable {
        *  @return price_ uint
    */
     function bondPrice() public view returns (uint256 price_) {
-        uint256 TAV = tavCalculator.calculateTAV();
+        uint256 TAV = tavCalculator.calculateTAV(); // 1e9 decimal equivalent
         uint256 premium = TAV.mul(terms.fee).div(1e5) + terms.controlVariable.mul(debtRatio());
-        price_ = (premium).add(TAV) / 1e7;
+        price_ = (premium).add(TAV) / 1e7; // price calculates in 1e3 equivalent
+    }
+
+    /**
+       *  @notice calculate bonding reward from premium
+       *  @return bondingReward_ uint
+   */
+    function calculateBondingReward() public view returns (uint256 bondingReward_) {
+        uint256 TAV = tavCalculator.calculateTAV(); // 1e9 decimal equivalent
+        uint256 premium = TAV.mul(terms.fee).div(1e5) + terms.controlVariable.mul(debtRatio());
+        bondingReward_ = premium.mul(terms.bondingRewardFee).div(1e12); // bondingReward_ calculated in 1e3 equivalent
     }
 
     /**
@@ -476,24 +499,8 @@ contract Bond is Ownable {
         }
     }
 
-    /**
-   *  @notice calculate amount of ORFI available for claim by depositor
-   *  @param _depositor address
-   *  @return pendingPayout_ uint
-   */
-    function pendingPayoutFor(address _depositor)
-    external
-    view
-    returns (uint256 pendingPayout_)
-    {
-        uint256 percentVested = percentVestedFor(_depositor);
-        uint256 payout = bondInfo[_depositor].payout;
-
-        if (percentVested >= 10000) {
-            pendingPayout_ = payout;
-        } else {
-            pendingPayout_ = payout.mul(percentVested) / 10000;
-        }
+    function convertInto18DecimalsEquivalent(uint256 _amount) internal view returns(uint256) {
+        return (_amount.mul(1e18)).div(10 ** principle.decimals());
     }
 
     /* ======= AUXILLIARY ======= */
@@ -502,12 +509,12 @@ contract Bond is Ownable {
      *  @notice allow anyone to send lost tokens (excluding principle or ORFI) to the DAO
    *  @return bool
    */
-    function recoverLostToken(IERC20 _token) external returns (bool) {
-        require(_token != ORFI, 'NAT');
-        require(_token != principle, 'NAP');
-        uint256 balance = _token.balanceOf(address(this));
-        _token.safeTransfer(DAO, balance);
-        emit LogRecoverLostToken(address(_token), balance);
+    function recoverLostToken(address _token) external returns (bool) {
+        require(_token != address(ORFI), 'NAT');
+        require(_token != address(principle), 'NAP');
+        uint256 balance = IERC20(_token).balanceOf(address(this));
+        IERC20(_token).safeTransfer(DAO, balance);
+        emit LogRecoverLostToken(_token, balance);
         return true;
     }
 }
