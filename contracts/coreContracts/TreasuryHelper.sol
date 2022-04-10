@@ -3,8 +3,8 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "./interface/IBondCalculator.sol";
-import "./interface/IERC20.sol";
+import "../interface/IBondCalculator.sol";
+import "../interface/IERC20.sol";
 
 interface ITreasury {
     function setTotalReserve(uint256 _totalReserve) external;

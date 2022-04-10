@@ -4,14 +4,14 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-import "./interface/ITreasury.sol";
-import "./interface/IBondCalculator.sol";
-import "./interface/ITAVCalculator.sol";
+import "../interface/ITreasury.sol";
+import "../interface/IBondCalculator.sol";
+import "../interface/ITAVCalculator.sol";
 
-import "./library/FixedPoint.sol";
-import "./library/SafeERC20.sol";
-import "./library/LowGasSafeMath.sol";
-import "./interface/IStaking.sol";
+import "../library/FixedPoint.sol";
+import "../library/SafeERC20.sol";
+import "../library/LowGasSafeMath.sol";
+import "../interface/IStaking.sol";
 
 
 contract Bond is Ownable {

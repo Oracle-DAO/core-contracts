@@ -4,14 +4,14 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-import "./interface/ITreasuryHelper.sol";
-import "./interface/IBondCalculator.sol";
-import "./interface/ITAVCalculator.sol";
-import "./interface/IORFI.sol";
-import "./interface/IERC20.sol";
+import "../interface/ITreasuryHelper.sol";
+import "../interface/IBondCalculator.sol";
+import "../interface/ITAVCalculator.sol";
+import "../interface/IORFI.sol";
+import "../interface/IERC20.sol";
 
-import "./library/SafeERC20.sol";
-import "./library/FixedPoint.sol";
+import "../library/SafeERC20.sol";
+import "../library/FixedPoint.sol";
 
 contract Treasury is Ownable {
     using FixedPoint for *;

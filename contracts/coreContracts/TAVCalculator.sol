@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import "./interface/IORFI.sol";
-import "./interface/IAssetManager.sol";
+import "../interface/IORFI.sol";
+import "../interface/IAssetManager.sol";
 
-import "./library/FixedPoint.sol";
-import "./library/LowGasSafeMath.sol";
+import "../library/FixedPoint.sol";
+import "../library/LowGasSafeMath.sol";
 
 contract TAVCalculator {
     using FixedPoint for *;
