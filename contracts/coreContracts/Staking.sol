@@ -133,9 +133,9 @@ contract Staking is Ownable {
   }
 
   /**
-   * @notice redeem sOHM for OHMs
-     * @param _to address
+   * @notice redeem sORFI for ORFIs
      * @param _amount uint
+     * @param _to address
      * @return amount_ uint
      */
   function unstake(

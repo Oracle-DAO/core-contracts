@@ -133,7 +133,7 @@ contract MockStaking is Ownable {
   }
 
   /**
-   * @notice redeem sOHM for OHMs
+   * @notice redeem sORFI for ORFIs
      * @param _to address
      * @param _amount uint
      * @return amount_ uint

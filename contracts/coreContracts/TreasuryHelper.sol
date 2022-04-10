@@ -313,14 +313,14 @@ contract TreasuryHelper is Ownable {
     }
 
     /**
-    @notice returns OHM valuation of asset
+    @notice returns ORFI valuation of asset
         @param _token address
         @param _amount uint
         @return value_ uint
      */
     function valueOfToken(address _token, uint256 _amount) external view returns (uint256 value_) {
         if (isReserveToken[_token]) {
-            // convert amount to match OHM decimals
+            // convert amount to match ORFI decimals
             value_ = _amount.mul(10**IERC20(ORFI).decimals()).div(10**IERC20(_token).decimals());
         } else if (isLiquidityToken[_token]) {
             value_ = IBondCalculator(bondCalculator[_token]).valuation(_token, _amount);
