@@ -12,7 +12,7 @@ import "../library/FixedPoint.sol";
 import "../library/SafeERC20.sol";
 import "../library/LowGasSafeMath.sol";
 import "../interface/IStaking.sol";
-import "hardhat/console.sol";
+
 
 contract Bond is Ownable {
     using FixedPoint for *;
@@ -101,7 +101,7 @@ contract Bond is Ownable {
     address public immutable DAO; // receives profit share from bond
 
     IStaking public staking; // to auto-stake payout
-    ITAVCalculator public tavCalculator; // to auto-stake payout
+    ITAVCalculator public tavCalculator; // to calculate TAV
 
     Terms public terms; // stores terms for new bonds
     Adjust public adjustment; // stores adjustment to BCV data
@@ -135,11 +135,13 @@ contract Bond is Ownable {
     /**
    *  @notice initializes bond parameters
    *  @param _controlVariable uint
-   *  @param _vestingTerm uint32
    *  @param _minimumPrice uint
    *  @param _maxPayout uint
+   *  @param _minPayout uint
    *  @param _fee uint
+   *  @param _bondingRewardFee uint
    *  @param _maxDebt uint
+   *  @param _vestingTerm uint32
    */
     function initializeBondTerms(
         uint256 _controlVariable,
@@ -153,7 +155,7 @@ contract Bond is Ownable {
     ) external onlyOwner {
         require(terms.controlVariable == 0, 'Bonds must be initialized from 0');
         require(_controlVariable >= 0, 'Can lock adjustment');
-        require(_maxPayout <= 10000, 'Payout cannot be above 1 percent');
+        require(_maxPayout <= 1000, 'Payout cannot be above 1 percent');
         require(_vestingTerm >= 10, 'Vesting must be longer than 36 hours');
         require(_fee <= 10000, 'DAO fee cannot exceed payout');
         require(_bondingRewardFee <= 10000, 'Bonding reward fee cannot be above 10%');
@@ -171,13 +173,10 @@ contract Bond is Ownable {
         emit InitTerms(terms);
     }
 
-    function setBondTerms(PARAMETER _parameter, uint256 _input)
-    external
-    onlyOwner
-    {
+    function setBondTerms(PARAMETER _parameter, uint256 _input) external onlyOwner {
         if (_parameter == PARAMETER.VESTING) {
             // 0
-            require(_input >= 129600, 'Vesting must be longer than 36 hours');
+            require(_input >= 259200, 'Vesting must be longer than 36 hours');
             terms.vestingTerm = uint32(_input);
         } else if (_parameter == PARAMETER.MAX_PAYOUT) {
             // 1
@@ -185,7 +184,8 @@ contract Bond is Ownable {
             terms.maxPayout = _input;
         } else if (_parameter == PARAMETER.FEE) {
             // 2
-            require(_input <= 10000, 'DAO fee cannot exceed payout');
+            require(_input <= 10000, 'DAO fee cannot exceed 10%');
+            require(_input >= 2000, 'DAO fee cannot go below 2%');
             terms.fee = _input;
         } else if (_parameter == PARAMETER.DEBT) {
             // 3
@@ -230,8 +230,8 @@ contract Bond is Ownable {
     function setStaking(address _staking) external onlyOwner {
         require(_staking != address(0), 'IA');
         staking = IStaking(_staking);
-        ORFI.approve(address(staking), 1e45);
         emit LogSetStaking(_staking);
+        ORFI.approve(address(staking), 1e45);
     }
 
     function setTAVCalculator(address _tavCalculator) external onlyOwner {
@@ -276,14 +276,6 @@ contract Bond is Ownable {
         uint256 fee = payout.mul(terms.fee) / 100000;
         uint256 orfiToMint = payout.add(fee);
 
-        principle.safeTransferFrom(msg.sender, address(this), amount);
-        treasury.deposit(amount, address(principle), orfiToMint);
-
-        if (fee != 0) {
-            // fee is transferred to team
-            ORFI.safeTransfer(DAO, fee);
-        }
-
         // total debt is increased
         totalDebt = totalDebt.add(_amount);
 
@@ -295,6 +287,14 @@ contract Bond is Ownable {
             pricePaid: priceInUSD
         });
 
+        principle.safeTransferFrom(msg.sender, address(this), _amount);
+        treasury.deposit(_amount, address(principle), orfiToMint);
+
+        if (fee != 0) {
+            // fee is transferred to dao
+            ORFI.safeTransfer(DAO, fee);
+        }
+
         // indexed events are emitted
         emit BondCreated(
             _amount,
@@ -303,7 +303,6 @@ contract Bond is Ownable {
             priceInUSD
         );
         emit BondPriceChanged(bondPriceInUSD(), bondPrice(), debtRatio());
-
         adjust(); // control variable is adjusted
         return payout;
     }
@@ -312,9 +311,8 @@ contract Bond is Ownable {
    *  @notice redeem bond for user
    *  @param _recipient address
    *  @param _stake bool
-   *  @return uint
    */
-    function redeem(address _recipient, bool _stake) external returns (uint256) {
+    function redeem(address _recipient, bool _stake) external {
         require(msg.sender == _recipient, 'NA');
         BondInfo memory info = bondInfo[_recipient];
         // (seconds since last interaction / vesting term remaining)
@@ -324,7 +322,7 @@ contract Bond is Ownable {
             // if fully vested
             delete bondInfo[_recipient]; // delete user info
             emit BondRedeemed(_recipient, info.payout, 0); // emit bond data
-            return stakeOrSend(_recipient, _stake, info.payout); // pay user everything due
+            stakeOrSend(_recipient, _stake, info.payout); // pay user everything due
         } else {
             // if unfinished
             // calculate payout vested
@@ -338,7 +336,7 @@ contract Bond is Ownable {
             });
 
             emit BondRedeemed(_recipient, payout, bondInfo[_recipient].payout);
-            return stakeOrSend(_recipient, _stake, payout);
+            stakeOrSend(_recipient, _stake, payout);
         }
     }
 
@@ -346,20 +344,18 @@ contract Bond is Ownable {
    *  @notice allow user to stake payout automatically
    *  @param _stake bool
    *  @param _amount uint
-   *  @return uint
    */
     function stakeOrSend(
         address _recipient,
         bool _stake,
         uint256 _amount
-    ) internal returns (uint256) {
+    ) internal {
         if (!_stake) {
             // if user does not want to stake
-            ORFI.transfer(_recipient, _amount); // send payout
+            ORFI.safeTransfer(_recipient, _amount); // send payout
         } else {
             staking.stake(_recipient, _amount);
         }
-        return _amount;
     }
 
     /**
@@ -496,6 +492,26 @@ contract Bond is Ownable {
             percentVested_ = secondsSinceLast.mul(10000) / vesting;
         } else {
             percentVested_ = 0;
+        }
+    }
+
+    /**
+   *  @notice calculate amount of ORFI available for claim by depositor
+   *  @param _depositor address
+   *  @return pendingPayout_ uint
+   */
+    function pendingPayoutFor(address _depositor)
+    external
+    view
+    returns (uint256 pendingPayout_)
+    {
+        uint256 percentVested = percentVestedFor(_depositor);
+        uint256 payout = bondInfo[_depositor].payout;
+
+        if (percentVested >= 10000) {
+            pendingPayout_ = payout;
+        } else {
+            pendingPayout_ = payout.mul(percentVested) / 10000;
         }
     }
 

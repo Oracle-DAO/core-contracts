@@ -10,7 +10,7 @@ export class constants {
   public static mimBondBCV = "100";
   public static bondVestingLength = "1200"; // 3 days times in second (3*24*3600)
   public static minBondPrice = "500000";
-  public static maxBondPayout = "10000";
+  public static maxBondPayout = "1000";
   public static minBondPayout = "10000000000000000"; // 0.01 ORFI
   public static bondFee = "5000"; // DAO fees 5 %
   public static bondRewardFee = "10000"; // bonding reward fee %

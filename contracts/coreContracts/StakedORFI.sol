@@ -15,7 +15,7 @@ contract StakedORFI is Context, ERC20{
     event LogStakingContractUpdated(address stakingContract);
 
     modifier onlyStakingContract() {
-        require(msg.sender == stakingContract, 'OSC');
+        require(msg.sender == stakingContract, 'Not a staking contract');
         _;
     }
 

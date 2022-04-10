@@ -6,7 +6,6 @@ import "../interface/IAssetManager.sol";
 
 import "../library/FixedPoint.sol";
 import "../library/LowGasSafeMath.sol";
-import "hardhat/console.sol";
 
 contract TAVCalculator {
     using FixedPoint for *;
