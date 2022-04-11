@@ -13,8 +13,10 @@ contract TAVCalculator {
     using LowGasSafeMath for uint32;
     IORFI public immutable ORFI;
     address[] assetManagers;
+    address public _owner;
 
     constructor(address _orfi, address _treasury) {
+        _owner = msg.sender;
         require(_orfi != address(0));
         ORFI = IORFI(_orfi);
         require(_treasury != address(0));
@@ -32,5 +34,11 @@ contract TAVCalculator {
 
     function calculateTAV(uint256 totalReserve, uint256 totalORFISupply) internal pure returns(uint256) {
         return (FixedPoint.fraction(totalReserve, totalORFISupply).decode112with18() / 1e9);
+    }
+
+    function addAssetManager(address assetManager_) external {
+        require(msg.sender == _owner, 'Invalid Caller');
+        require(assetManager_ != address(0));
+        assetManagers.push(assetManager_);
     }
 }

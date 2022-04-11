@@ -119,11 +119,11 @@ describe("Reward Distributor", async () => {
     delay(10000);
 
     await rewardDistributor.completeRewardCycle(constants.initialMint);
-    //
-    const rewardsForCycle = await rewardDistributor.connect(user1).rewardsForACycle(user1.address, 2);
-    //
-    expect(parseFloat(rewardsForCycle)).to.gt(0);
+    await mockStaking.connect(user1).stake(user1.address, "800000000000000000000000");
 
+    const rewardsForCycle = await rewardDistributor.connect(user1).rewardsForACycle(user1.address, 2);
+
+    expect(parseFloat(rewardsForCycle)).to.gt(0);
   });
 
   it("Check complete reward cycle", async function () {

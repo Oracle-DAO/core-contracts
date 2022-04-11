@@ -58,6 +58,7 @@ contract Treasury is Ownable {
     }
 
     function setStakedORFI(address _sORFI) external onlyOwner {
+        require(_sORFI != address(0));
         sORFI = _sORFI;
     }
 
@@ -65,8 +66,16 @@ contract Treasury is Ownable {
         tavCalculator = _tavCalculator;
     }
 
+    function addLiquidityBond(address _token, address _liquidityBond) external onlyOwner {
+        bondCalculator[_token] = _liquidityBond;
+    }
+
+    function removeLiquidityBond(address _liquidityBond) external onlyOwner {
+        delete bondCalculator[_liquidityBond];
+    }
+
     /**
-    @notice allow approved address to deposit an asset for OHM
+    @notice allow approved address to deposit an asset for ORFI
         @param _amount uint
         @param _token address
         @param _orfiAmount uint
@@ -80,9 +89,6 @@ contract Treasury is Ownable {
         bool isLiquidityToken = ITreasuryHelper(treasuryHelper).isLiquidityToken(_token);
 
         require(isReserveToken || isLiquidityToken, 'NA');
-        _totalReserves = _totalReserves.add(_amount);
-
-        IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
 
         if (isReserveToken) {
             require(ITreasuryHelper(treasuryHelper).isReserveDepositor(msg.sender), 'NAPPROVED');
@@ -90,16 +96,18 @@ contract Treasury is Ownable {
             require(ITreasuryHelper(treasuryHelper).isLiquidityDepositor(msg.sender), 'NAPPROVED');
         }
 
+        _totalReserves = _totalReserves.add(_amount);
         _totalORFIMinted = _totalORFIMinted.add(_orfiAmount);
+
+        IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
         IORFI(ORFI).mint(msg.sender, _orfiAmount);
 
         emit ReservesUpdated(_totalReserves);
-
         emit Deposit(_token, _amount, _orfiAmount);
     }
 
     /**
-    @notice allow approved address to burn OHM for reserves
+    @notice allow approved address to burn ORFI for reserves
         @param _amount uint
         @param _token address
      */
@@ -110,62 +118,13 @@ contract Treasury is Ownable {
 
         uint256 orfiToBurn = orfiEqValue(valueOfToken(_token, _amount, true, false));
 
-        IORFI(ORFI).burnFrom(msg.sender, orfiToBurn);
-
         _totalORFIMinted = _totalORFIMinted.sub(orfiToBurn);
         _totalReserves = _totalReserves.sub(_amount);
         emit ReservesUpdated(_totalReserves);
 
+        IORFI(ORFI).burnFrom(msg.sender, orfiToBurn);
         IERC20(_token).safeTransfer(msg.sender, _amount);
-
         emit Withdrawal(_token, _amount, orfiToBurn);
-    }
-
-    /**
-    @notice allow approved address to borrow reserves
-        @param _amount uint
-        @param _token address
-     */
-    function incurDebt(uint256 _amount, address _token) external {
-        require(ITreasuryHelper(treasuryHelper).isDebtor(msg.sender), 'NApproved');
-        require(ITreasuryHelper(treasuryHelper).isReserveToken(_token), 'NA');
-
-        uint256 orfiForDebt = orfiEqValue(valueOfToken(_token, _amount, true, false));
-
-        uint256 maximumDebt = IERC20(sORFI).balanceOf(msg.sender); // Can only borrow against sOHM held
-        uint256 availableDebt = maximumDebt.sub(debtorBalance[msg.sender]);
-        require(orfiForDebt <= availableDebt, 'Exceeds debt limit');
-
-        debtorBalance[msg.sender] = debtorBalance[msg.sender].add(orfiForDebt);
-        _totalDebt = _totalDebt.add(orfiForDebt);
-
-        _totalReserves = _totalReserves.sub(_amount);
-        emit ReservesUpdated(_totalReserves);
-
-        IERC20(_token).transfer(msg.sender, _amount);
-
-        emit CreateDebt(msg.sender, _token, _amount, orfiForDebt);
-    }
-
-    /**
-    @notice allow approved address to repay borrowed reserves with reserves
-        @param _amount uint
-        @param _token address
-     */
-    function repayDebtWithReserve(uint256 _amount, address _token) external {
-        require(ITreasuryHelper(treasuryHelper).isDebtor(msg.sender), 'NApproved');
-        require(ITreasuryHelper(treasuryHelper).isReserveToken(_token), 'NA');
-
-        _totalReserves = _totalReserves.add(_amount);
-        IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
-
-        uint256 debtORFIRepaid = orfiEqValue(valueOfToken(_token, _amount, true, false));
-        debtorBalance[msg.sender] = debtorBalance[msg.sender].sub(debtORFIRepaid);
-        _totalDebt = _totalDebt.sub(debtORFIRepaid);
-
-        emit ReservesUpdated(_totalReserves);
-
-        emit RepayDebt(msg.sender, _token, _amount, debtORFIRepaid);
     }
 
     /**
@@ -196,17 +155,15 @@ contract Treasury is Ownable {
         @param _amount uint
         @return value_ uint
      */
-    function valueOfToken(address _token, uint256 _amount, bool isReserveToken, bool isLiquidToken)
-    public
-    view
-    returns (uint256 value_)
-    {
+    function valueOfToken(address _token, uint256 _amount, bool isReserveToken, bool isLiquidToken) public
+    view returns (uint256) {
         if (isReserveToken) {
-            // convert amount to match OHM decimals
-            value_ = _amount.mul(10**IERC20(ORFI).decimals()).div(10**IERC20(_token).decimals());
+            // convert amount to match ORFI decimals
+            return _amount.mul(10**IERC20(ORFI).decimals()).div(10**IERC20(_token).decimals());
         } else if (isLiquidToken) {
-            value_ = IBondCalculator(bondCalculator[_token]).valuation(_token, _amount);
+            return IBondCalculator(bondCalculator[_token]).valuation(_token, _amount);
         }
+        return 0;
     }
 
     function orfiEqValue(uint256 _amount)
