@@ -97,6 +97,8 @@ describe("Bond Test", function () {
     );
 
     await bond.setTAVCalculator(tavCalculator.address);
+
+    await bond.setFloorPriceValue("1000000000");
     // approve large number for treasury, so that it can move
     await mim.approve(bond.address, constants.largeApproval);
 
@@ -111,7 +113,7 @@ describe("Bond Test", function () {
   });
   it("Bond Deposit", async function () {
     let orfiBalance, orfiBalance1;
-    await bond.deposit("1000000000000000000000", "600000", deployer.address);
+    await bond.deposit("1000000000000000000000", "600000");
   });
 
   it("Bond Redeem", async function () {
