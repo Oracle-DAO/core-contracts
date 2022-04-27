@@ -95,8 +95,8 @@ contract Treasury is Ownable {
         } else {
             require(ITreasuryHelper(treasuryHelper).isLiquidityDepositor(msg.sender), 'NAPPROVED');
         }
-
-        _totalReserves = _totalReserves.add(_amount);
+        uint256 value = valueOfToken(_token, _amount, isReserveToken, isLiquidityToken);
+        _totalReserves = _totalReserves.add(value);
         _totalORFIMinted = _totalORFIMinted.add(_orfiAmount);
 
         IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);

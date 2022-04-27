@@ -111,6 +111,7 @@ contract Bond is Ownable {
     uint256 public totalDebt; // total value of outstanding bonds; used for pricing
     uint32 public lastDecay; // reference time for debt decay
     uint256 public bondingReward;
+    uint256 public floorPriceValue;
 
     /* ======== INITIALIZATION ======== */
 
@@ -234,6 +235,11 @@ contract Bond is Ownable {
         ORFI.approve(address(staking), 1e45);
     }
 
+    function setFloorPriceValue(uint256 _value) external onlyOwner {
+        require(_value != 0);
+        floorPriceValue = _value;
+    }
+
     function setTAVCalculator(address _tavCalculator) external onlyOwner {
         require(_tavCalculator != address(0), 'IA');
         tavCalculator = ITAVCalculator(_tavCalculator);
@@ -251,11 +257,8 @@ contract Bond is Ownable {
    */
     function deposit(
         uint256 _amount,
-        uint256 _maxPrice,
-        address _depositor
+        uint256 _maxPrice
     ) external returns (uint256) {
-        require(_depositor != address(0), 'Invalid address');
-        require(msg.sender == _depositor, 'LFNA');
         decayDebt();
 
         // convert stablecoin decimals to 18 equivalent
@@ -280,8 +283,8 @@ contract Bond is Ownable {
         totalDebt = totalDebt.add(_amount);
 
         // depositor info is stored
-        bondInfo[_depositor] = BondInfo({
-            payout: bondInfo[_depositor].payout.add(payout),
+        bondInfo[msg.sender] = BondInfo({
+            payout: bondInfo[msg.sender].payout.add(payout),
             vesting: terms.vestingTerm,
             lastTime: uint32(block.timestamp),
             pricePaid: priceInUSD
@@ -411,7 +414,7 @@ contract Bond is Ownable {
     function bondPrice() public view returns (uint256 price_) {
         uint256 TAV = tavCalculator.calculateTAV(); // 1e9 decimal equivalent
         uint256 premium = TAV.mul(terms.fee).div(1e5) + terms.controlVariable.mul(debtRatio());
-        price_ = (premium).add(TAV) / 1e7; // price calculates in 1e3 equivalent
+        price_ = (premium).add(TAV > floorPriceValue ? TAV : floorPriceValue) / 1e7; // price calculates in 1e3 equivalent
     }
 
     /**
@@ -446,7 +449,7 @@ contract Bond is Ownable {
     }
 
     /**
-    *  @notice calculate current ratio of debt to ORFI supply
+    *  @notice calculate current ratio of debt to ORFI supply in 1e9 equivalent
     *  @return debtRatio_ uint
     */
     function debtRatio() public view returns (uint256 debtRatio_) {

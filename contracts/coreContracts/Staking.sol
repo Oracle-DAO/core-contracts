@@ -56,7 +56,7 @@ contract Staking is Ownable {
     sORFI = IERC20(_sorfi);
   }
 
-  function setRewardDistributor(address rewardDistributor_) external {
+  function setRewardDistributor(address rewardDistributor_) external onlyOwner {
     rewardDistributor = IRewardDistributor(rewardDistributor_);
   }
 
