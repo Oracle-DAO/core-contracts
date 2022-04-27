@@ -252,7 +252,6 @@ contract Bond is Ownable {
      *  @notice deposit bond
    *  @param _amount uint
    *  @param _maxPrice uint
-   *  @param _depositor address
    *  @return uint
    */
     function deposit(
