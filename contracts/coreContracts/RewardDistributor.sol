@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "../library/FixedPoint.sol";
 import "../library/LowGasSafeMath.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "../interface/IERC20.sol";
+import "../library/SafeERC20.sol";
 import "../interface/ITreasury.sol";
 
 
@@ -16,6 +16,7 @@ contract RewardDistributor is Ownable {
     event RedeemedRewards(address indexed account, uint256 amount, uint256 rewardCycle);
 
     using FixedPoint for *;
+    using SafeERC20 for IERC20;
     using LowGasSafeMath for uint256;
     using LowGasSafeMath for uint32;
 
@@ -61,10 +62,12 @@ contract RewardDistributor is Ownable {
     }
 
     function setStableCoinAddress(address stableCoinAddress_) external onlyOwner {
+        require(stableCoinAddress_ != address(0));
         _stableCoinAddress = stableCoinAddress_;
     }
 
     function setTreasuryAddress(address treasuryAddress_) external onlyOwner {
+        require(treasuryAddress_ != address(0));
         _treasury = treasuryAddress_;
     }
 
@@ -102,7 +105,7 @@ contract RewardDistributor is Ownable {
         _totalRewardsAllocated -= rewards;
         _userRecentRedeemMapping[account_] = rewardCycle_;
         ITreasury(_treasury).manage(_stableCoinAddress, rewards);
-        IERC20(_stableCoinAddress).transfer(account_, rewards);
+        IERC20(_stableCoinAddress).safeTransfer(account_, rewards);
         emit RedeemedRewards(account_, rewards, rewardCycle_);
     }
 

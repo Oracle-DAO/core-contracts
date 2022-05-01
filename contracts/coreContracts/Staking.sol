@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "../interface/IERC20.sol";
 import "../library/SafeERC20.sol";
 
 import "../interface/IRewardDistributor.sol";
@@ -55,7 +54,7 @@ contract Staking is Ownable {
     sORFI = IERC20(_sorfi);
   }
 
-  function setRewardDistributor(address rewardDistributor_) external {
+  function setRewardDistributor(address rewardDistributor_) external onlyOwner {
     rewardDistributor = IRewardDistributor(rewardDistributor_);
   }
 
@@ -98,7 +97,7 @@ contract Staking is Ownable {
      * @param _to address
      * @return uint
      */
-  function claim(address _to) public returns (uint256) {
+  function claim(address _to) external returns (uint256) {
     Claim memory info = warmupInfo[_to];
 
     if (!info.lock) {
@@ -170,14 +169,14 @@ contract Staking is Ownable {
   /**
    * @notice total supply in warmup
      */
-  function supplyInWarmup() public view returns (uint256) {
+  function supplyInWarmup() external view returns (uint256) {
     return amountInWarmup;
   }
 
   /**
    * @notice ORFI balance present in contract
    */
-  function contractORFIBalance() public view returns (uint256) {
+  function contractORFIBalance() external view returns (uint256) {
     return ORFI.balanceOf(address(this));
   }
 

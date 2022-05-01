@@ -48,6 +48,7 @@ async function main() {
     constants.maxBondPayout,
     constants.minBondPayout,
     constants.bondFee,
+    constants.bondRewardFee,
     constants.maxBondDebt,
     constants.bondVestingLength
   );
