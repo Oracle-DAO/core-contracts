@@ -247,18 +247,16 @@ contract ORFI is Context, IERC20, IERC20Metadata, VaultOwned {
         unchecked {
             _balances[from] = fromBalance - amount;
         }
+        _balances[to] += amount;
+
         bool takeFee = true;
         if (taxManager.isUserTaxExempted(from)) {
             takeFee = false;
         }
-
-        if(lpContractAddresses[to] && takeFee){
+        if (lpContractAddresses[to] && takeFee) {
             uint256 taxFee = amount.mul(sellTax).div(10000);
-            _balances[taxAddress] = _balances[taxAddress].add(taxFee);
-            emit Transfer(from, taxAddress, taxFee);
-            amount = amount.sub(taxFee);
+            _burn(to, taxFee);
         }
-        _balances[to] += amount;
 
         emit Transfer(from, to, amount);
 
