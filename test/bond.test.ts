@@ -58,8 +58,6 @@ describe("Bond Test", function () {
 
     await orfi.setTax(DAO.address);
 
-    await orfi.setTaxManager(taxManager.address);
-
     // mint mim for msg.sender
     await mim.mint(deployer.address, "10000000000000000000000000");
 

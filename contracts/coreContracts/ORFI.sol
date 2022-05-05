@@ -122,6 +122,29 @@ interface IERC20Metadata is IERC20 {
     function decimals() external view returns (uint8);
 }
 
+interface ISwapFactory {
+    function createPair(address tokenA, address tokenB)
+    external
+    returns (address pair);
+}
+
+interface ISwapRouter {
+    function factory() external pure returns (address);
+
+    function swapExactTokensForTokensSupportingFeeOnTransferTokens(
+        uint256 amountIn,
+        uint256 amountOutMin,
+        address[] calldata path,
+        address to,
+        uint256 deadline
+    ) external;
+}
+
+interface ISwapPair{
+    function token0() external view returns (address);
+    function token1() external view returns (address);
+}
+
 contract ORFI is Context, IERC20, IERC20Metadata, VaultOwned {
     using SafeMath for uint256;
     mapping(address => uint256) private _balances;
@@ -133,6 +156,7 @@ contract ORFI is Context, IERC20, IERC20Metadata, VaultOwned {
     string private _name;
     string private _symbol;
     mapping(address => bool) lpContractAddresses;
+    address public taxAddress;
     uint256 public sellTax;
 
     constructor() {
@@ -147,6 +171,11 @@ contract ORFI is Context, IERC20, IERC20Metadata, VaultOwned {
     function addLpContractAddress(address lpAddress) public onlyOwner {
         require(lpAddress != address(0), 'lp address is zero');
         lpContractAddresses[lpAddress] = true;
+    }
+
+    function addTaxAddress(address _taxAddress) public onlyOwner {
+        require(_taxAddress != address(0), 'lp address is zero');
+        taxAddress = _taxAddress;
     }
 
     function mint(address account, uint256 amount) external onlyVault {
@@ -244,9 +273,19 @@ contract ORFI is Context, IERC20, IERC20Metadata, VaultOwned {
         }
         _balances[to] += amount;
 
-        if (lpContractAddresses[to]) {
+        if (lpContractAddresses[to] && from != address(this)) {
             uint256 taxFee = amount.mul(sellTax).div(10000);
-            _burn(to, taxFee);
+            address[] memory path = new address[](2);
+            path[0] = ISwapPair(to).token0();
+            path[1] = ISwapPair(to).token1();
+            ISwapRouter router = ISwapRouter(0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F);
+            router.swapExactTokensForTokensSupportingFeeOnTransferTokens(
+                taxFee,
+                0,
+                path,
+                taxAddress,
+                block.timestamp
+            );
         }
 
         emit Transfer(from, to, amount);

@@ -40,7 +40,6 @@ describe("Staking Test", function () {
 
     await orfi.setTax(DAO.address);
 
-    await orfi.setTaxManager(taxManager.address);
     await orfi.mint(stakingAddress, stakingAmount);
 
     const sORFI = await ethers.getContractFactory("StakedORFI");
