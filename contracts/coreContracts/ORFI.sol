@@ -133,25 +133,20 @@ contract ORFI is Context, IERC20, IERC20Metadata, VaultOwned {
     string private _name;
     string private _symbol;
     mapping(address => bool) lpContractAddresses;
-    address public taxAddress;
     uint256 public sellTax;
-    ITaxManager public taxManager;
 
     constructor() {
         _name = "Oracle";
         _symbol = "ORFI";
     }
 
-    function setTaxAddress(address _taxAddress) public onlyOwner {
-        taxAddress = _taxAddress;
-    }
-
     function setTax(uint256 _taxFee) public onlyOwner{
         sellTax = _taxFee;
     }
 
-    function setTaxManager(address _taxManager) public onlyOwner{
-        taxManager = ITaxManager(_taxManager);
+    function addLpContractAddress(address lpAddress) public onlyOwner {
+        require(lpAddress != address(0), 'lp address is zero');
+        lpContractAddresses[lpAddress] = true;
     }
 
     function mint(address account, uint256 amount) external onlyVault {
@@ -249,11 +244,7 @@ contract ORFI is Context, IERC20, IERC20Metadata, VaultOwned {
         }
         _balances[to] += amount;
 
-        bool takeFee = true;
-        if (taxManager.isUserTaxExempted(from)) {
-            takeFee = false;
-        }
-        if (lpContractAddresses[to] && takeFee) {
+        if (lpContractAddresses[to]) {
             uint256 taxFee = amount.mul(sellTax).div(10000);
             _burn(to, taxFee);
         }
