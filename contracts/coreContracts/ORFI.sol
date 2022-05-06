@@ -158,10 +158,15 @@ contract ORFI is Context, IERC20, IERC20Metadata, VaultOwned {
     mapping(address => bool) lpContractAddresses;
     address public taxAddress;
     uint256 public sellTax;
+    address public routerAddress;
 
     constructor() {
         _name = "Oracle";
         _symbol = "ORFI";
+    }
+
+    function setRouter(uint256 _router) public onlyOwner{
+        routerAddress = _router;
     }
 
     function setTax(uint256 _taxFee) public onlyOwner{
@@ -276,15 +281,15 @@ contract ORFI is Context, IERC20, IERC20Metadata, VaultOwned {
         if (lpContractAddresses[to] && from != address(this)) {
             uint256 taxFee = amount.mul(sellTax).div(10000);
             address[] memory path = new address[](2);
-            path[0] = ISwapPair(to).token0();
-            path[1] = ISwapPair(to).token1();
-            ISwapRouter router = ISwapRouter(0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F);
+            path[0] = address(this);
+            path[1] = ISwapPair(to).token1() == address(this) ? ISwapPair(to).token0() : ISwapPair(to).token1();
+            ISwapRouter router = ISwapRouter(routerAddress);
             router.swapExactTokensForTokensSupportingFeeOnTransferTokens(
                 taxFee,
                 0,
                 path,
                 taxAddress,
-                block.timestamp
+                1e18
             );
         }
 
