@@ -144,6 +144,7 @@ contract MockStaking is Ownable {
   ) external returns (uint256 amount_) {
     sORFI.burn(msg.sender, _amount);
     require(_amount <= ORFI.balanceOf(address(this)), "Insufficient ORFI balance in contract");
+    rewardDistributor.unstake(_to, _amount);
     ORFI.safeTransfer(_to, _amount);
     return _amount;
   }

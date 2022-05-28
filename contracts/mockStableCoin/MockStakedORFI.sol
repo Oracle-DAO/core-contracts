@@ -16,6 +16,10 @@ contract MockStakedORFI is Ownable, ERC20 {
         _mint(account, amount);
     }
 
+    function burn(address to, uint256 amount) external virtual {
+        _burn(to, amount);
+    }
+
     function burnFrom(address account_, uint256 amount_) external virtual {
         _burnFrom(account_, amount_);
     }
