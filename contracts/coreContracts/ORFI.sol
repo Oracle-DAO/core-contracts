@@ -156,31 +156,50 @@ contract ORFI is Context, IERC20, IERC20Metadata, VaultOwned {
     string private _name;
     string private _symbol;
     mapping(address => bool) lpContractAddresses;
-    address public taxAddress;
-    uint256 public sellTax;
+    mapping(address => bool) taxExempt;
+
+    address public pair;
+    uint256 public baseSellTax;
+    uint256 public multiplier;
     address public routerAddress;
 
-    constructor() {
+    constructor(address _mim) {
         _name = "Oracle";
         _symbol = "ORFI";
+
+        baseSellTax = 18;
+        multiplier = 5;
+        ISwapRouter router = ISwapRouter(0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff);
+        taxExempt[msg.sender] = true;
     }
 
-    function setRouter(uint256 _router) public onlyOwner{
+    function setRouter(address _router) public onlyOwner{
         routerAddress = _router;
     }
 
-    function setTax(uint256 _taxFee) public onlyOwner{
-        sellTax = _taxFee;
+    function addTaxExempt(address _add) public onlyOwner {
+        require(_add != address(0), 'address is zero');
+        taxExempt[_add] = true;
+    }
+
+    function removeTaxExempt(address _add) public onlyOwner {
+        require(_add != address(0), 'address is zero');
+        delete taxExempt[_add];
+    }
+
+    function setBaseSellTax(uint256 _baseSellTax) public onlyOwner {
+        require(_baseSellTax <= 30, 'Base Sell Tax Too High');
+        baseSellTax = _baseSellTax;
+    }
+
+    function setMultiplier(uint256 _multiplier) public onlyOwner {
+        require(_multiplier <= 15, 'MultiPlier Too High');
+        multiplier = _multiplier;
     }
 
     function addLpContractAddress(address lpAddress) public onlyOwner {
         require(lpAddress != address(0), 'lp address is zero');
         lpContractAddresses[lpAddress] = true;
-    }
-
-    function addTaxAddress(address _taxAddress) public onlyOwner {
-        require(_taxAddress != address(0), 'lp address is zero');
-        taxAddress = _taxAddress;
     }
 
     function mint(address account, uint256 amount) external onlyVault {
@@ -276,26 +295,45 @@ contract ORFI is Context, IERC20, IERC20Metadata, VaultOwned {
         unchecked {
             _balances[from] = fromBalance - amount;
         }
-        _balances[to] += amount;
 
-        if (lpContractAddresses[to] && from != address(this)) {
-            uint256 taxFee = amount.mul(sellTax).div(10000);
-            address[] memory path = new address[](2);
-            path[0] = address(this);
-            path[1] = ISwapPair(to).token1() == address(this) ? ISwapPair(to).token0() : ISwapPair(to).token1();
-            ISwapRouter router = ISwapRouter(routerAddress);
-            router.swapExactTokensForTokensSupportingFeeOnTransferTokens(
-                taxFee,
-                0,
-                path,
-                taxAddress,
-                1e18
-            );
+        uint256 amountReceived = amountAfterTakeFee(from, to, amount);
+
+        _balances[to] += amountReceived;
+
+        emit Transfer(from, to, amountReceived);
+
+        _afterTokenTransfer(from, to, amountReceived);
+    }
+
+    function amountAfterTakeFee(address sender, address recipient, uint256 amount)
+    internal
+    returns (uint256)
+    {
+        if (taxExempt[sender] || !lpContractAddresses[recipient]) {
+            return amount;
         }
 
-        emit Transfer(from, to, amount);
+        uint256 feeAmount = amount.mul(getCurrentSellTax(amount)).div(100);
+        _balances[address(this)] += feeAmount;
+        _burn(address(this), feeAmount);
 
-        _afterTokenTransfer(from, to, amount);
+        emit Transfer(sender, address(this), feeAmount);
+        return amount.sub(feeAmount);
+    }
+
+    function getCurrentSellTax(uint256 amount) public view returns (uint256) {
+        uint256 sellTax;
+        if (amount <= 1e20) {
+            sellTax = baseSellTax;
+        } else if (amount <= 1e21) {
+            sellTax = baseSellTax + multiplier;
+        } else  if (amount <= 1e22) {
+            sellTax = baseSellTax + multiplier * 2;
+        } else {
+            sellTax = baseSellTax + multiplier * 3;
+        }
+
+        return sellTax;
     }
 
     function _mint(address account, uint256 amount) internal virtual {

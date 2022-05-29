@@ -32,20 +32,7 @@ const config: HardhatUserConfig = {
       },
     },
   },
-  networks: {
-    oasis: {
-      url: "https://testnet.emerald.oasis.dev",
-      accounts: [
 
-      ],
-    },
-
-    oasis_mainnet: {
-      url: "https://rpc.emerald.oasis.doorgod.io:7545/",
-      accounts:
-        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
-    },
-  },
   gasReporter: {
     enabled: process.env.REPORT_GAS !== undefined,
     currency: "USD",
