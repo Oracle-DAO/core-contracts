@@ -11,8 +11,6 @@ async function main() {
   await mim.deployed();
 
   console.log("Token address of mim:", mim.address);
-
-  await mim.mint(deployer.address, constants.initialMint);
   // We also save the contract's artifacts and address in the frontend directory
   saveFrontendFiles(mim, "MIM");
 }

@@ -3,62 +3,38 @@ import { ethers } from "hardhat";
 import { readContractAddress } from "../../helpers";
 import { constants } from "../../constants";
 
-const nttAdd = readContractAddress("/NTT.json");
-const projectManagamentAdd = readContractAddress("/ProjectManagement.json");
+const mimAdd = readContractAddress("/MIM.json");
+const orfiAdd = readContractAddress("/ORFI.json");
 
 async function main() {
-  const [deployer, deployer1] = await ethers.getSigners();
-
-  const NTT = await ethers.getContractFactory("NTT");
-  const ntt = await NTT.attach(nttAdd);
+  const [deployer] = await ethers.getSigners();
 
   const ORFI = await ethers.getContractFactory("ORFI");
-  const orfi = await ORFI.attach("0xea664D289C7EFfCFB6Cb5723B436481f65B4E54B");
+  const orfi = await ORFI.attach(orfiAdd);
 
-  const ProjectManagement = await ethers.getContractFactory(
-    "ProjectManagement"
-  );
-  const projectManagement = await ProjectManagement.attach(
-    projectManagamentAdd
-  );
+  const MIM = await ethers.getContractFactory("MIM");
+  const mim = await MIM.attach(mimAdd);
 
-  console.log(
-    await orfi.balanceOf("0xD107F7087Aa5489Ca71521Cb64628c7bE61ECbE1")
-  );
+  // let txn = await orfi.setVault(deployer.address);
+  // txn.wait();
 
-  // await ntt.setOrfiAddress("0xea664D289C7EFfCFB6Cb5723B436481f65B4E54B");
+  // await orfi.addLpContractAddress("0x5AB1b92D2991D3E6a51d2D2cF7c196296a855740");
 
-  // await ntt.toggleRedeemFlag();
+  // console.log(await orfi.pair());
+  // await orfi.addTaxExempt("0xE22994f609394EfFcD2c24520CaB1e968Da47D4a");
 
-  // TEAM Redeem
-  await projectManagement.setMemberInfo(deployer1.address, "150000000000000000000000", 60, true);
-  console.log(await ntt.balanceOf(deployer1.address));
-  await projectManagement.connect(deployer1).redeem(deployer1.address);
-  console.log(await ntt.balanceOf(deployer1.address));
+  await orfi.setMultiplier(7);
+  // await mim.mint(deployer.address, constants.initialMint);
 
-  // Marketing manager
-  await projectManagement.setMarketingManager(deployer1.address);
-  await projectManagement.connect(deployer1).redeemTokenForMarketing(deployer.address, "150000000000000000000000");
-  console.log(await ntt.balanceOf(deployer.address));
+  // await mim.mint(deployer.address, "1000000000000000000000");
+  // await orfi.mint(deployer.address, "1000000000000000000000000");
+  // await orfi.setTax("1000");
 
-  // Blacklist and redeem
-  await projectManagement.setMemberInfo(deployer1.address, "15000000000000000000000", 2000, true);
-  console.log(await ntt.balanceOf(deployer1.address));
-  await projectManagement.blacklistAndRedeem(deployer1.address);
-  console.log(await ntt.balanceOf(deployer1.address));
-  console.log(await projectManagement.checkPayout(deployer1.address));
+  // await orfi.addLpContractAddress("0x0319000133d3ada02600f0875d2cf03d442c3367");
 
-  // Redeem ORCL
-  const supply1 = await ntt.totalSupply();
-
-  await ntt.connect(deployer1).redeemORFI("150000000000000000000");
-
-  const supply2 = await ntt.totalSupply();
-  console.log("supply before", supply1);
-  console.log("supply after", supply2);
-  console.log("contracts are attached to their ABIs");
-  console.log("NTT: " + nttAdd);
-  console.log("ProjectManagement: " + projectManagamentAdd);
+  console.log(await orfi.totalSupply());
+  console.log("ORFI: " + orfiAdd);
+  console.log("MIM Token: " + mimAdd);
 }
 
 main().catch((error) => {

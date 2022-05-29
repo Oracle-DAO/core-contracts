@@ -11,13 +11,15 @@ describe("Staking Test", function () {
   let stakingAddress: any;
   let orfi: Contract;
   let sorfi: Contract;
+  let taxManager: Contract;
+  let DAO: any;
   let staking: Contract;
   let rewardDistributor: Contract;
 
   const delay = async (ms: number) => new Promise((res) => setTimeout(res, ms));
 
   beforeEach(async () => {
-    [deployer] = await ethers.getSigners();
+    [deployer, DAO] = await ethers.getSigners();
     stakingAddress = deployer.address;
 
     const MIM = await ethers.getContractFactory("MIM");
@@ -28,7 +30,16 @@ describe("Staking Test", function () {
     orfi = await ORFI.deploy();
     await orfi.deployed();
 
+    const TaxManager = await ethers.getContractFactory("TaxManager");
+    taxManager = await TaxManager.deploy();
+
+    // Only treasury can mint ORFI.
     await orfi.setVault(deployer.address);
+
+    await orfi.setTax(500);
+
+    await orfi.setTax(DAO.address);
+
     await orfi.mint(stakingAddress, stakingAmount);
 
     const sORFI = await ethers.getContractFactory("StakedORFI");
