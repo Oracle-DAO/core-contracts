@@ -6,6 +6,7 @@ import "../library/LowGasSafeMath.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "../library/SafeERC20.sol";
 import "../interface/ITreasury.sol";
+import "hardhat/console.sol";
 
 
 contract RewardDistributor is Ownable {
@@ -38,6 +39,7 @@ contract RewardDistributor is Ownable {
     mapping(uint8 => RewardCycle) private _rewardCycleMapping;
     mapping(address => uint8) private _userRecentRedeemMapping;
     mapping(address => mapping(uint8 => UserStakeInfo)) public _userStakeInfoToRewardCycleMapping;
+    mapping(address => uint8) public _userActivityMapping;
 
     address private _stakingContract;
     address private _stakedOrfiAddress;
@@ -100,6 +102,7 @@ contract RewardDistributor is Ownable {
     }
 
     function redeemRewardsForACycle(address account_, uint8 rewardCycle_) public {
+        updateBalanceBasedOnPreviousCycle(account_);
         uint256 rewards = rewardsForACycle(account_, rewardCycle_);
         _userStakeInfoToRewardCycleMapping[account_][rewardCycle_].redeemed = true;
         _totalRewardsAllocated -= rewards;
@@ -114,11 +117,12 @@ contract RewardDistributor is Ownable {
         require(rewardCycle_ < currentRewardCycle, "Invalid Reward Cycle");
 
         UserStakeInfo memory userStakeInfo = _userStakeInfoToRewardCycleMapping[account_][rewardCycle_];
+
         require(!userStakeInfo.redeemed, "User Has already Redeemed");
         require(userStakeInfo.stakedOrfiAmount > 0, "Staked Amount is 0");
+
         RewardCycle memory rewardCycle = _rewardCycleMapping[rewardCycle_];
         uint32 cycleLength = rewardCycle.endTimestamp.sub32(rewardCycle.startTimestamp);
-
         uint256 investedTimeInCycle = averageTimeInCycle(cycleLength, userStakeInfo.averageInvestedTime);
         uint256 stakedOrfiPortion = calculateStakeOrfiPortion(userStakeInfo.stakedOrfiAmount, rewardCycle.totalStakedOrfiAmount);
 
@@ -126,7 +130,9 @@ contract RewardDistributor is Ownable {
     }
 
     function updateStakeOrfiBalance(address to_, uint256 amount, bool isStake) internal returns(uint256){
+        updateBalanceBasedOnPreviousCycle(to_);
         UserStakeInfo memory userStakeInfo = _userStakeInfoToRewardCycleMapping[to_][currentRewardCycle];
+        _userActivityMapping[to_] = currentRewardCycle;
         if(isStake) {
             uint256 tAVG = calculateAverageTime
             (
@@ -151,6 +157,21 @@ contract RewardDistributor is Ownable {
             }
             emit UnstakeBalanceUpdated(to_, amount, userStakeInfo.averageInvestedTime);
             return userStakeInfo.averageInvestedTime;
+        }
+    }
+
+    function updateBalanceBasedOnPreviousCycle(address to_) internal {
+        if(_userActivityMapping[to_] != currentRewardCycle) {
+            for (uint8 i=_userActivityMapping[to_]+1; i<=currentRewardCycle; i++){
+                UserStakeInfo memory userStakeInfo = _userStakeInfoToRewardCycleMapping[to_][i-1];
+                UserStakeInfo memory newUserStakeInfo;
+                newUserStakeInfo.averageInvestedTime = 0;
+                newUserStakeInfo.rewardCycle = i;
+                newUserStakeInfo.stakedOrfiAmount = userStakeInfo.stakedOrfiAmount;
+                newUserStakeInfo.redeemed = false;
+                _userStakeInfoToRewardCycleMapping[to_][i] = newUserStakeInfo;
+            }
+            _userActivityMapping[to_] = currentRewardCycle;
         }
     }
 
@@ -203,4 +224,14 @@ contract RewardDistributor is Ownable {
         }
         return totalRewards_;
     }
+
+    function getTotalStakedOrfiOfUserForACycle(address account_, uint8 rewardCycle) external view returns(uint256 amount_) {
+        amount_ = _userStakeInfoToRewardCycleMapping[account_][rewardCycle].stakedOrfiAmount;
+    }
+
+    function getTotalStakedOrfiForACycle(uint8 rewardCycle) external view returns(uint256 amount_) {
+        amount_ = _rewardCycleMapping[rewardCycle].totalStakedOrfiAmount;
+    }
+
+
 }
