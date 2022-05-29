@@ -12,7 +12,7 @@ describe("Treasury Testing", function () {
     await mim.deployed();
 
     const ORFI = await ethers.getContractFactory("ORFI");
-    const orfi = await ORFI.deploy();
+    const orfi = await ORFI.deploy(mim.address);
     await orfi.deployed();
 
     const TreasuryHelper = await ethers.getContractFactory("TreasuryHelper");

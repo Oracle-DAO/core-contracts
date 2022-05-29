@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: Apache 2.0
 pragma solidity ^0.8.0;
 
 import "../library/FixedPoint.sol";
@@ -73,6 +73,10 @@ contract RewardDistributor is Ownable {
         _treasury = treasuryAddress_;
     }
 
+    /**
+   *  @notice This complete the reward cycle and alot a reward amount for the corresponding cycle
+   *  @param rewardAmount uint256
+   */
     function completeRewardCycle(uint256 rewardAmount) external onlyOwner {
         require(rewardAmount > 0);
         RewardCycle memory rewardCycle = _rewardCycleMapping[currentRewardCycle];
@@ -86,14 +90,28 @@ contract RewardDistributor is Ownable {
         _rewardCycleMapping[currentRewardCycle].startTimestamp = uint32(block.timestamp);
     }
 
+    /**
+   *  @notice This function is triggered when user stake ORFI. The sOrfi and average time value for the respective cycle get updated
+   *  @param to_ address
+   *  @param amount uint256
+   */
     function stake(address to_, uint256 amount) external onlyStakingContract {
         updateStakeOrfiBalance(to_, amount, true);
     }
 
+    /**
+   *  @notice This function is triggered when user unstake sORFI. The sOrfi value for the respective cycle get updated
+   *  @param to_ address
+   *  @param amount uint256
+   */
     function unstake(address to_, uint256 amount) external onlyStakingContract {
         updateStakeOrfiBalance(to_, amount, false);
     }
 
+    /**
+   *  @notice User can redeem rewards for all the cycle
+   *  @param account_ address
+   */
     function redeemTotalRewardsForUser(address account_) external {
         require(account_ != address(0));
         for(uint8 i = _userRecentRedeemMapping[account_]+1; i<currentRewardCycle; i++){
@@ -101,6 +119,11 @@ contract RewardDistributor is Ownable {
         }
     }
 
+    /**
+   *  @notice User can redeem reward for a cycle
+   *  @param account_ address
+   *  @param rewardCycle_ uint8
+   */
     function redeemRewardsForACycle(address account_, uint8 rewardCycle_) public {
         updateBalanceBasedOnPreviousCycle(account_);
         uint256 rewards = rewardsForACycle(account_, rewardCycle_);
@@ -112,6 +135,12 @@ contract RewardDistributor is Ownable {
         emit RedeemedRewards(account_, rewards, rewardCycle_);
     }
 
+    /**
+   *  @notice Check user reward for a cycle
+   *  @param account_ address
+   *  @param rewardCycle_ uint8
+   *  @return uint256
+   */
     function rewardsForACycle(address account_, uint8 rewardCycle_) public view returns(uint256) {
         require(account_ != address(0));
         require(rewardCycle_ < currentRewardCycle, "Invalid Reward Cycle");
@@ -175,6 +204,14 @@ contract RewardDistributor is Ownable {
         }
     }
 
+    /**
+   *  @notice Calculate invested average time of a user
+   *  @param tAVG uint32
+   *  @param rewardCycleStartTime uint32
+   *  @param stakedOrfiAmount uint256
+   *  @param amount uint256
+   *  @return uint256
+   */
     function calculateAverageTime(uint32 tAVG, uint32 rewardCycleStartTime, uint256 stakedOrfiAmount, uint256 amount) internal view returns(uint256){
         uint256 stakeTimeValue = tAVG.mul(stakedOrfiAmount);
         uint256 stakingTime = block.timestamp.sub(rewardCycleStartTime);

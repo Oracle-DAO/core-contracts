@@ -10,7 +10,6 @@ describe("Bond Test", function () {
     treasury: Contract,
     tavCalculator: Contract,
     bond: Contract,
-    taxManager: Contract,
     deployer: any,
     DAO: any,
     user1: any,
@@ -24,7 +23,7 @@ describe("Bond Test", function () {
     await mim.deployed();
 
     const ORFI = await ethers.getContractFactory("ORFI");
-    orfi = await ORFI.deploy();
+    orfi = await ORFI.deploy(mim.address);
     await orfi.deployed();
 
     const TreasuryHelper = await ethers.getContractFactory("TreasuryHelper");
@@ -48,15 +47,8 @@ describe("Bond Test", function () {
     );
     await treasury.deployed();
 
-    const TaxManager = await ethers.getContractFactory("TaxManager");
-    taxManager = await TaxManager.deploy();
-
     // Only treasury can mint ORFI.
     await orfi.setVault(treasury.address);
-
-    await orfi.setTax(500);
-
-    await orfi.setTax(DAO.address);
 
     // mint mim for msg.sender
     await mim.mint(deployer.address, "10000000000000000000000000");
