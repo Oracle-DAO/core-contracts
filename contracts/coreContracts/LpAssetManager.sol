@@ -5,12 +5,13 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "../interface/ISwapPair.sol";
+import "../interface/IERC20.sol";
 
 contract LpAssetManager is Ownable {
     event LpDeposited(address indexed account, uint256 amount, uint256 price);
     event LpManaged(address indexed account, uint256 amount);
     ISwapPair public lpAddress;
-    ISwapPair public principal;
+    IERC20 public principal;
     using SafeMath for uint256;
 
     mapping(address => bool) isManager;
@@ -21,8 +22,17 @@ contract LpAssetManager is Ownable {
         require(lpAddress_ != address(0));
         require(principal_ != address(0));
         lpAddress = ISwapPair(lpAddress_);
-        principal = ISwapPair(principal_);
+        principal = IERC20(principal_);
         isManager[msg.sender] = true;
+    }
+
+    function addManager(address _manager) external onlyOwner {
+        require(_manager != address(0));
+        isManager[_manager] = true;
+    }
+
+    function removeManager(address _manager) external onlyOwner {
+        isManager[_manager] = false;
     }
 
     function deposit(uint256 amount_) external {
@@ -33,7 +43,7 @@ contract LpAssetManager is Ownable {
         lpAddress.transferFrom(msg.sender, address(this), amount_);
     }
 
-    function getReserves() external view returns(uint256 reserves_) {
+    function totalReserves() external view returns(uint256 reserves_) {
         (uint112 _reserve0, uint112 _reserve1,) = lpAddress.getReserves();
         (uint112 reserve0, ) = lpAddress.token0() ==  address(principal) ? (_reserve0, _reserve1) : (_reserve1, _reserve0);
         uint256 stableCoinReserve = convertInto18DecimalsEquivalent(reserve0);
@@ -44,7 +54,7 @@ contract LpAssetManager is Ownable {
         totalInvestmentAmount_ = 0;
     }
 
-    function manage(uint256 amount_) external{
+    function manage(uint256 amount_) external {
         require(isManager[msg.sender], "Caller is not manager");
         require(amount_ > 0, "Amount should be GT 0");
         require(lpAddress.balanceOf(address(this)) >= amount_, "Insufficient Balance in contract");
