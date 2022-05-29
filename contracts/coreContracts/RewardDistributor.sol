@@ -161,7 +161,7 @@ contract RewardDistributor is Ownable {
     }
 
     function updateBalanceBasedOnPreviousCycle(address to_) internal {
-        if(_userActivityMapping[to_] != currentRewardCycle){
+        if(_userActivityMapping[to_] != currentRewardCycle) {
             for (uint8 i=_userActivityMapping[to_]+1; i<=currentRewardCycle; i++){
                 UserStakeInfo memory userStakeInfo = _userStakeInfoToRewardCycleMapping[to_][i-1];
                 UserStakeInfo memory newUserStakeInfo;
