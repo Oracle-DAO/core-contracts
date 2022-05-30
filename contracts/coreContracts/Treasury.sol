@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: Apache 2.0
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -168,6 +168,10 @@ contract Treasury is Ownable {
         return 0;
     }
 
+    /**
+    * @notice Returns stable coins amount valuation in ORFI
+     * @param _amount uint
+     */
     function orfiEqValue(uint256 _amount)
     public
     view

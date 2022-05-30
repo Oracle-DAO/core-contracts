@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: Apache 2.0
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
@@ -16,6 +16,8 @@ contract Staking is Ownable {
   /* ========== EVENTS ========== */
 
   event WarmupSet(uint256 warmup);
+  event OrfiStaked(address indexed account, uint256 amount);
+  event OrfiUnstaked(address indexed account, uint256 amount);
 
   /* ========== DATA STRUCTURES ========== */
 
@@ -74,6 +76,7 @@ contract Staking is Ownable {
     if (warmupPeriod == 0) {
       _send(_to, _amount);
       rewardDistributor.stake(_to, _amount);
+      emit OrfiStaked(_to, _amount);
       return _amount;
     } else {
         Claim memory info = warmupInfo[_to];
@@ -108,6 +111,7 @@ contract Staking is Ownable {
       delete warmupInfo[_to];
 
       amountInWarmup = amountInWarmup.sub(info.deposit);
+      emit OrfiStaked(_to, info.deposit);
       return _send(_to, info.deposit);
     }
     return 0;
@@ -146,6 +150,7 @@ contract Staking is Ownable {
     require(_amount <= ORFI.balanceOf(address(this)), "Insufficient ORFI balance in contract");
     ORFI.safeTransfer(_to, _amount);
     rewardDistributor.unstake(_to, amount_);
+    emit OrfiUnstaked(_to, _amount);
     return _amount;
   }
 
@@ -191,6 +196,9 @@ contract Staking is Ownable {
     emit WarmupSet(_warmupPeriod);
   }
 
+  /**
+   * @notice get reward distributor address
+   */
   function getRewardDistributorAddress() external view returns(address) {
     return address(rewardDistributor);
   }

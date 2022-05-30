@@ -5,9 +5,14 @@ import { Contract } from "ethers";
 
 describe("ORFI Test", function () {
   let orfi: Contract,
+    mim: Contract,
     deployer: any;
   before(async () => {
     [deployer] = await ethers.getSigners();
+
+    const MIM = await ethers.getContractFactory("MIM");
+    mim = await MIM.deploy();
+    await mim.deployed();
 
     const ORFI = await ethers.getContractFactory("ORFI");
     orfi = await ORFI.deploy();
