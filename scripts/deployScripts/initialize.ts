@@ -120,7 +120,7 @@ async function main() {
 
   console.log("contracts are attached to their ABIs");
   console.log("ORFI: " + orfiAdd);
-  console.log("MIM Token: " + mimAdd);
+  console.log("MIM Token: " + constants.usdtAddress);
   console.log("Treasury: " + treasuryAdd);
   console.log("TreasuryHelper: " + TreasuryHelperAdd);
   console.log("TAV Calculator: " + tavCalculatorAdd);

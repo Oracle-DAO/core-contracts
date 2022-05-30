@@ -11,7 +11,7 @@ async function main() {
   const TreasuryHelper = await ethers.getContractFactory("TreasuryHelper");
   const treasuryHelper = await TreasuryHelper.deploy(
     orfiAddress,
-    mimAddress,
+    constants.usdtAddress,
     constants.blockNeededToWait
   );
   await treasuryHelper.deployed();

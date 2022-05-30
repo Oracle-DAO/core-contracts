@@ -16,9 +16,11 @@ async function main() {
 
   await orfi.setVault(deployer.address);
 
-  await orfi.mint(deployer.address, "100000000000000000000000");
+  await orfi.mint(constants.nttContractAddress, "181000000000000000000000");
+  await orfi.mint(deployer.address, "39000000000000000000000");
+
   console.log("step 6");
-  // TODO: mint ORFI and transfer it to NTT contract
+
   await orfi.setVault(treasury.address);
   console.log("vault set completed");
 

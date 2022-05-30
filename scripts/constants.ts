@@ -8,16 +8,20 @@ export class constants {
   public static zeroAddress = "0x0000000000000000000000000000000000000000";
   public static largeApproval = "100000000000000000000000000000000";
   public static initialMint = "10000000000000000000000000";
-  public static mimBondBCV = "100";
-  public static bondVestingLength = "1200"; // 3 days times in second (3*24*3600)
+  public static mimBondBCV = "1000";
+  // TODO: vesting need to be done 3 days
+  public static bondVestingLength = "259200"; // 3 days times in second (3*24*3600)
   public static minBondPrice = "500000";
   public static maxBondPayout = "10000"; // max payout 10 % of total supply
   public static minBondPayout = "10000000000000000"; // 0.01 ORFI
-  public static bondFee = "5000"; // DAO fees 5 %
+  public static bondFee = "10000"; // DAO fees 10 %
   public static bondRewardFee = "10000"; // bonding reward fee %
   public static maxBondDebt = "1000000000000000000000000";
   public static adjustmentIncrement = "3";
   public static blockNeededToWait = "0";
-  public static lpAddress = "0xc8eD4cC13C7f28BBA08d38bBD9aaa90FfA0155F6";
-  public static principalToken = "0x09DC92B84BC354AAcc23fC5498Ba9ca17E495a8F";
+  public static lpAddress = "";
+  public static principalToken = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F";
+  public static nttContractAddress = "0x57e54A873382F9758f1F6dE9790f50c1F50c67C9";
+  public static usdtAddress = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F";
+
 }

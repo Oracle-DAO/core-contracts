@@ -33,7 +33,10 @@ const config: HardhatUserConfig = {
     polygon: {
       url: "https://polygon-mainnet.g.alchemy.com/v2/-uRy8IMZxGnHG4EeeXSfBxzdjFxac4j4",
       accounts:
-        process.env.PREPROD_PRIVATE_KEY !== undefined ? [process.env.PREPROD_PRIVATE_KEY] : [],
+        process.env.PREPROD_PRIVATE_KEY !== undefined &&
+        process.env.TEAM_FEES_PRIVATE_KEY !== undefined
+          ? [process.env.PREPROD_PRIVATE_KEY, process.env.TEAM_FEES_PRIVATE_KEY]
+          : [],
     },
     mumbai: {
       url: "https://rpc-mumbai.maticvigil.com/v1/359ff5efa8f5b3f88dda7197b743de8312f31344",
@@ -45,12 +48,18 @@ const config: HardhatUserConfig = {
     metis: {
       url: "https://stardust.metis.io/?owner=588",
       accounts:
-          process.env.TEST_PTIVATE_KEY !== undefined && process.env.TEAM_FEES_PRIVATE_KEY !== undefined ? [process.env.TEST_PTIVATE_KEY, process.env.TEAM_FEES_PRIVATE_KEY] : [],
+        process.env.TEST_PTIVATE_KEY !== undefined &&
+        process.env.TEAM_FEES_PRIVATE_KEY !== undefined
+          ? [process.env.TEST_PTIVATE_KEY, process.env.TEAM_FEES_PRIVATE_KEY]
+          : [],
     },
     oasis: {
       url: "https://testnet.emerald.oasis.dev",
       accounts:
-        process.env.TEST_PTIVATE_KEY !== undefined && process.env.TEAM_FEES_PRIVATE_KEY !== undefined ? [process.env.TEST_PTIVATE_KEY, process.env.TEAM_FEES_PRIVATE_KEY] : [],
+        process.env.TEST_PTIVATE_KEY !== undefined &&
+        process.env.TEAM_FEES_PRIVATE_KEY !== undefined
+          ? [process.env.TEST_PTIVATE_KEY, process.env.TEAM_FEES_PRIVATE_KEY]
+          : [],
     },
   },
   gasReporter: {

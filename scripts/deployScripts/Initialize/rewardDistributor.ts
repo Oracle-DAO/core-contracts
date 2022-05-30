@@ -24,7 +24,7 @@ async function main() {
   await rewardDistributor.setTreasuryAddress(treasury.address);
   console.log("step 1");
 
-  await rewardDistributor.setStableCoinAddress(mim.address);
+  await rewardDistributor.setStableCoinAddress(constants.usdtAddress);
   console.log("step 2");
 }
 

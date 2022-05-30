@@ -61,14 +61,18 @@ async function main() {
 
   // console.log(await rewardDistributor.getTotalStakedOrfiOfUserForACycle(deployer.address, 1));
 
-  // // console.log("2:", await rewardDistributor.rewardsForACycle(deployer.address, 2));
-  // // console.log("3:", await rewardDistributor.rewardsForACycle(deployer.address, 3));
+  // console.log("2:", await rewardDistributor.rewardsForACycle("0xe10293396F0Ec3D4A0ED7e3042d7C3174955E009", 3));
+  // console.log("3:", await rewardDistributor.rewardsForACycle("0xe10293396F0Ec3D4A0ED7e3042d7C3174955E009", 5));
+  // console.log("3:", await rewardDistributor.rewardsForACycle("0xe10293396F0Ec3D4A0ED7e3042d7C3174955E009", 6));
+  // console.log("3:", await rewardDistributor.rewardsForACycle("0xe10293396F0Ec3D4A0ED7e3042d7C3174955E009", 7));
+  // console.log("3:", await rewardDistributor.rewardsForACycle("0xe10293396F0Ec3D4A0ED7e3042d7C3174955E009", 8));
+
   console.log(await rewardDistributor.currentRewardCycle());
-  // console.log("1:", await rewardDistributor.getTotalRewardsForUser("0xE22994f609394EfFcD2c24520CaB1e968Da47D4a"));
+  console.log("1:", await rewardDistributor.getTotalRewardsForUser("0xe10293396F0Ec3D4A0ED7e3042d7C3174955E009"));
   //
   // console.log(await rewardDistributor._userStakeInfoToRewardCycleMapping(deployer.address, 1));
   // // console.log(await rewardDistributor._(deployer.address, 4));
-  console.log(await rewardDistributor._userActivityMapping("0xE22994f609394EfFcD2c24520CaB1e968Da47D4a")); // 1
+  // console.log(await rewardDistributor._userActivityMapping("0xE22994f609394EfFcD2c24520CaB1e968Da47D4a")); // 1
   // console.log(await rewardDistributor._userStakeInfoToRewardCycleMapping(deployer.address, 2));
   // // console.log(await rewardDistributor._userStakeInfoToRewardCycleMapping(deployer.address, 3));
   //

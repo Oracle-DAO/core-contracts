@@ -7,7 +7,7 @@ async function main() {
   const LpAssetFact = await ethers.getContractFactory("LpAsset");
   const lpAsset = await LpAssetFact.deploy(
     constants.lpAddress,
-    constants.principalToken
+    constants.usdtAddress
   );
   await lpAsset.deployed();
 

@@ -16,17 +16,15 @@ async function main() {
   const treasury = await Treasury.attach(treasuryAdd);
 
   const MIM = await ethers.getContractFactory("MIM");
-  const mim = await MIM.attach(mimAdd);
+  const mim = await MIM.attach(constants.usdtAddress);
 
   // approve large number for treasury, so that it can move
   await mim.approve(treasury.address, constants.largeApproval);
   console.log("step 4");
+
   // approve large number for treasury, so that it can transfer token as spender
   await mim.approve(mimBond.address, constants.largeApproval);
   console.log("step 5");
-
-  await mim.mint(deployer.address, "1000000000000");
-  console.log("step 6");
 }
 
 main().catch((error) => {

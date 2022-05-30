@@ -214,11 +214,11 @@ contract Bond is Ownable {
         uint32 _buffer
     ) external onlyOwner {
         require(
-            _increment <= terms.controlVariable.mul(50) / 1000,
+            _increment <= terms.controlVariable.mul(500) / 1000,
             'Increment too large'
         );
-        require(_maxTarget >= 250, 'Next Adjustment could be locked');
-        require(_minTarget <= 250, 'Next Adjustment could be locked');
+        require(_maxTarget >= 1000, 'Next Adjustment could be locked');
+        require(_minTarget <= 1000, 'Next Adjustment could be locked');
         adjustment = Adjust({
             add: _addition,
             rate: _increment,
