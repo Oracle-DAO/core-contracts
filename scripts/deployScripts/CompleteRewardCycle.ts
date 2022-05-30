@@ -11,7 +11,7 @@ async function main() {
   const RewardDistributor = await ethers.getContractFactory("RewardDistributor");
   const rewardDistributor = await RewardDistributor.attach(RewardDistributorAdd);
 
-  await rewardDistributor.completeRewardCycle("1000000000000000000000000");
+  await rewardDistributor.completeRewardCycle("1000000000");
 }
 
 main().catch((error) => {

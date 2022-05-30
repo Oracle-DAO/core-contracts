@@ -92,7 +92,7 @@ describe("Treasury Testing", function () {
 
     // Deposit 10 MIM and mint 5 ORFI
     await treasury.deposit(
-      "10000000000000000000", // reserve token amount to deposit
+      "10000000", // reserve token amount to deposit
       mim.address,
       "5000000000000000000" // amount of orfi to mint
     );
@@ -101,7 +101,7 @@ describe("Treasury Testing", function () {
 
     // assuming the ORFI price to be 1$, burn 2.5$ of ORFI and retrive 2.5$
     // mim balance after this method for deployer is 92500000000000000000
-    await treasury.withdraw("2500000000000000000", mim.address);
+    await treasury.withdraw("2500000", mim.address);
 
     expect(await treasury.totalReserves()).to.equal("7500000000000000000");
 

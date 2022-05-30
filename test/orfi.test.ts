@@ -36,7 +36,7 @@ describe("ORFI Test", function () {
 
   it("Should burn minted ORFI", async function () {
 
-    await orfi.burnFrom(deployer.address, "1000000000000000000");
+    await orfi.burn("1000000000000000000");
 
     expect(await orfi.balanceOf(deployer.address)).to.equal(
       "0"

@@ -12,6 +12,8 @@ import "../library/FixedPoint.sol";
 import "../library/SafeERC20.sol";
 import "../library/LowGasSafeMath.sol";
 import "../interface/IStaking.sol";
+import "hardhat/console.sol";
+
 
 
 contract Bond is Ownable {
@@ -212,7 +214,7 @@ contract Bond is Ownable {
         uint32 _buffer
     ) external onlyOwner {
         require(
-            _increment <= terms.controlVariable.mul(25) / 1000,
+            _increment <= terms.controlVariable.mul(50) / 1000,
             'Increment too large'
         );
         require(_maxTarget >= 250, 'Next Adjustment could be locked');
@@ -266,6 +268,7 @@ contract Bond is Ownable {
         uint256 priceInUSD = bondPriceInUSD(); // Stored in bond info
         bondingReward = bondingReward.add(calculateBondingReward()); // calculate bonding rewards
 
+        console.log(priceInUSD);
         require(_maxPrice >= priceInUSD, 'Slippage limit: more than max price'); // slippage protection
 
         uint256 payout = payoutFor(amount); // payout to bonder is computed in 1e18

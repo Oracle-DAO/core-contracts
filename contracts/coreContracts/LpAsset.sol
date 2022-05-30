@@ -46,7 +46,8 @@ contract LpAsset is Ownable {
     function totalReserves() external view returns(uint256 reserves_) {
         (uint112 _reserve0, uint112 _reserve1,) = lpAddress.getReserves();
         (uint112 reserve0, ) = lpAddress.token0() ==  address(principal) ? (_reserve0, _reserve1) : (_reserve1, _reserve0);
-        reserves_ =  uint256(reserve0).mul(2);
+        uint256 stableCoinReserves = convertInto18DecimalsEquivalent(uint256(reserve0));
+        reserves_ =  stableCoinReserves.mul(2);
     }
 
     function totalInvestedAmount() external pure returns(uint256 totalInvestmentAmount_) {

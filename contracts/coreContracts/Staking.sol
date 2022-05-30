@@ -149,7 +149,7 @@ contract Staking is Ownable {
     sORFI.burn(msg.sender, _amount);
     require(_amount <= ORFI.balanceOf(address(this)), "Insufficient ORFI balance in contract");
     ORFI.safeTransfer(_to, _amount);
-    rewardDistributor.unstake(_to, amount_);
+    rewardDistributor.unstake(_to, _amount);
     emit OrfiUnstaked(_to, _amount);
     return _amount;
   }

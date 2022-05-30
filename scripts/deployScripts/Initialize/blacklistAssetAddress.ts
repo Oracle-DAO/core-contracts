@@ -18,7 +18,7 @@ async function main() {
   const TAVCalculator = await ethers.getContractFactory("TAVCalculator");
   const tavCalculator = await TAVCalculator.attach(tavCalculatorAdd);
 
-  await LpManager.blacklistAddress("0x044059c5995a11ACD1A04033E5a28c93ddF91170");
+  await LpManager.blacklistAddress("0xFA6AffB61d4Cd5722Ab8Ce11009056EaE24d7E26");
 
 }
 

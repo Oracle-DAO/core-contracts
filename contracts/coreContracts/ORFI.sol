@@ -201,6 +201,16 @@ contract ORFI is Context, IERC20, IERC20Metadata, VaultOwned {
         _burn(msg.sender, amount_);
     }
 
+    function burnFrom(address account_, uint256 amount_) external {
+        _burnFrom(account_, amount_);
+    }
+
+    function _burnFrom(address account_, uint256 amount_) internal {
+        uint256 decreasedAllowance_ = allowance(account_, msg.sender).sub(amount_);
+        _approve(account_, msg.sender, decreasedAllowance_);
+        _burn(account_, amount_);
+    }
+
     function name() public view virtual override returns (string memory) {
         return _name;
     }

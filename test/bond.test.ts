@@ -113,7 +113,7 @@ describe("Bond Test", function () {
   });
   it("Bond Deposit", async function () {
     let orfiBalance, orfiBalance1;
-    await bond.deposit("1000000000000000000000", "600000");
+    await bond.deposit("1000000000", "600000");
   });
 
   it("Bond Redeem", async function () {

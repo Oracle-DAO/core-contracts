@@ -55,9 +55,31 @@ async function main() {
       LpAssetAdd
   );
 
-  console.log(await mimBond.bondPrice());
+  // console.log(await mimBond.bondPrice());
+  //
+  // console.log(await mimBond.floorPriceValue());
 
-  console.log(await mimBond.floorPriceValue());
+  console.log(await rewardDistributor.getTotalStakedOrfiOfUserForACycle(deployer.address, 1));
+
+  console.log(await rewardDistributor.rewardsForACycle(deployer.address, 1));
+
+  console.log(await treasury.totalReserves());
+
+  await mimBond.setAdjustment(true, 100, 3000, 100, 1);
+
+  // await mimBond.setBondTerms(0, 2400);
+
+  // await treasury.withdraw("1000000000", constants.principalToken);
+
+  // console.log(await treasury.totalReserves());
+  //
+  // await staking.stake(deployer.address, "1000000000000000000000");
+  //
+  // console.log(await rewardDistributor.getTotalStakedOrfiOfUserForACycle(deployer.address, 1));
+  //
+  // await staking.unstake(deployer.address, "1000000000000000000000");
+  //
+  // console.log(await rewardDistributor.getTotalStakedOrfiOfUserForACycle(deployer.address, 1));
 
   // await mimBond.setFloorPriceValue(constants.floorPrice);
   //
@@ -65,19 +87,19 @@ async function main() {
   //
   // console.log(await mimBond.terms());
 
-  console.log("tav : ", await tavCalculator.calculateTAV());
-
-  console.log("total reserves of LP", await LpAsset.totalReserves());
-
-  console.log("total reserves of Treasury", await treasury.totalReserves());
-
-  console.log("total ORFI supply",await orfi.totalSupply());
-
-  const terms = await mimBond.terms();
-
-  console.log("terms fees:", terms.fee);
-  console.log("terms control variable:", terms.controlVariable);
-  console.log("debt ratio:", await mimBond.debtRatio());
+  // console.log("tav : ", await tavCalculator.calculateTAV());
+  //
+  // console.log("total reserves of LP", await LpAsset.totalReserves());
+  //
+  // console.log("total reserves of Treasury", await treasury.totalReserves());
+  //
+  // console.log("total ORFI supply",await orfi.totalSupply());
+  //
+  // const terms = await mimBond.terms();
+  //
+  // console.log("terms fees:", terms.fee);
+  // console.log("terms control variable:", terms.controlVariable);
+  // console.log("debt ratio:", await mimBond.debtRatio());
 
   // const LpAssetFact1 = await ethers.getContractFactory(
   //     "LpAsset"

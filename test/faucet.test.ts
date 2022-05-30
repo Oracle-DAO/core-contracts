@@ -17,7 +17,7 @@ describe("ORFI Faucet Test", function () {
     await mim.deployed();
 
     const ORFI = await ethers.getContractFactory("ORFI");
-    orfi = await ORFI.deploy(mim.address);
+    orfi = await ORFI.deploy();
     await orfi.deployed();
 
     const OrfiFaucet = await ethers.getContractFactory("OrfiFaucet");
