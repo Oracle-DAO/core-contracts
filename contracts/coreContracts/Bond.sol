@@ -156,7 +156,7 @@ contract Bond is Ownable {
     ) external onlyOwner {
         require(terms.controlVariable == 0, 'Bonds must be initialized from 0');
         require(_controlVariable >= 0, 'Can lock adjustment');
-        require(_maxPayout <= 1000, 'Payout cannot be above 1 percent');
+        require(_maxPayout <= 10000, 'Payout cannot be above 10 percent');
         require(_vestingTerm >= 10, 'Vesting must be longer than 36 hours');
         require(_fee <= 10000, 'DAO fee cannot exceed payout');
         require(_bondingRewardFee <= 10000, 'Bonding reward fee cannot be above 10%');
@@ -181,7 +181,7 @@ contract Bond is Ownable {
             terms.vestingTerm = uint32(_input);
         } else if (_parameter == PARAMETER.MAX_PAYOUT) {
             // 1
-            require(_input <= 1000, 'Payout cannot be above 1 percent');
+            require(_input <= 10000, 'Payout cannot be above 10 percent');
             terms.maxPayout = _input;
         } else if (_parameter == PARAMETER.FEE) {
             // 2

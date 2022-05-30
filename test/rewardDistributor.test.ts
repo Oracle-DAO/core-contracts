@@ -110,74 +110,79 @@ describe("Reward Distributor", async () => {
 
     await mockStaking.stake(deployer.address, "800000000000000000000000");
 
-    await rewardDistributor.completeRewardCycle(constants.initialMint);
+    console.log(await rewardDistributor.getTotalStakedOrfiOfUserForACycle(deployer.address, 1));
+
+    await mockStaking.unstake(deployer.address, "500000000000000000000000");
+
+    console.log(await rewardDistributor.getTotalStakedOrfiOfUserForACycle(deployer.address, 1));
+    // await rewardDistributor.completeRewardCycle(constants.initialMint);
   });
-
-  it("Check redeem for a cycle", async function () {
-    await mockStaking.setRewardDistributor(rewardDistributor.address);
-    await rewardDistributor.setTreasuryAddress(treasury.address);
-    await rewardDistributor.setStableCoinAddress(mim.address);
-    expect(await mockStaking.getRewardDistributorAddress()).to.equal(
-      rewardDistributor.address
-    );
-
-    await mockOrfi.mint(user1.address, constants.largeApproval);
-    await mockOrfi
-      .connect(user1)
-      .approve(mockStaking.address, constants.largeApproval);
-
-    await mockStaking
-      .connect(user1)
-      .stake(user1.address, "400000000000000000000000");
-    await mockStaking
-      .connect(user1)
-      .stake(user1.address, "800000000000000000000000");
-
-    delay(10000);
-
-    await rewardDistributor.completeRewardCycle(constants.initialMint);
-    await mockStaking
-      .connect(user1)
-      .stake(user1.address, "800000000000000000000000");
-
-    const rewardsForCycle = await rewardDistributor
-      .connect(user1)
-      .rewardsForACycle(user1.address, 2);
-
-    // console.log("rewards for cycle", rewardsForCycle);
-    expect(parseFloat(rewardsForCycle)).to.gt(0);
-  });
-
-  it("Check complete reward cycle", async function () {
-    rewardAmount = constants.initialMint;
-    expect(await rewardDistributor.currentRewardCycle()).to.equal(3);
-
-    await rewardDistributor.completeRewardCycle(rewardAmount);
-    expect(await rewardDistributor.currentRewardCycle()).to.equal(4);
-    expect(await rewardDistributor.getTotalRewardsForCycle(1)).to.equal(
-      rewardAmount
-    );
-  });
-
-  it("Check Reward with gaps in cycle", async function () {
-    rewardAmount = constants.initialMint;
-    expect(await rewardDistributor.currentRewardCycle()).to.equal(4);
-    await mockStaking.unstake(deployer.address, "400000000000000000000000");
-    expect(
-      await rewardDistributor.getTotalStakedOrfiOfUserForACycle(deployer.address, 2)
-    ).to.gt(0);
-    await rewardDistributor.completeRewardCycle(rewardAmount);
-    // console.log(await rewardDistributor.rewardsForACycle(deployer.address, 1));
-    // console.log(await rewardDistributor.rewardsForACycle(deployer.address, 2));
-    // console.log(await rewardDistributor.rewardsForACycle(deployer.address, 3));
-    // console.log(await rewardDistributor.rewardsForACycle(deployer.address, 4));
-    //
-    // console.log(await rewardDistributor.getTotalStakedOrfiOfUserForACycle(deployer.address, 1));
-    // console.log(await rewardDistributor.getTotalStakedOrfiOfUserForACycle(deployer.address, 2));
-    // console.log(await rewardDistributor.getTotalStakedOrfiOfUserForACycle(deployer.address, 3));
-    // console.log(await rewardDistributor.getTotalStakedOrfiOfUserForACycle(deployer.address, 4));
-
-    // console.log(await rewardDistributor.getTotalStakedOrfiForACycle(4));
-
-  });
+  //
+  // it("Check redeem for a cycle", async function () {
+  //   await mockStaking.setRewardDistributor(rewardDistributor.address);
+  //   await rewardDistributor.setTreasuryAddress(treasury.address);
+  //   await rewardDistributor.setStableCoinAddress(mim.address);
+  //   expect(await mockStaking.getRewardDistributorAddress()).to.equal(
+  //     rewardDistributor.address
+  //   );
+  //
+  //   await mockOrfi.mint(user1.address, constants.largeApproval);
+  //   await mockOrfi
+  //     .connect(user1)
+  //     .approve(mockStaking.address, constants.largeApproval);
+  //
+  //   await mockStaking
+  //     .connect(user1)
+  //     .stake(user1.address, "400000000000000000000000");
+  //   await mockStaking
+  //     .connect(user1)
+  //     .stake(user1.address, "800000000000000000000000");
+  //
+  //   delay(10000);
+  //
+  //   await rewardDistributor.completeRewardCycle(constants.initialMint);
+  //   await mockStaking
+  //     .connect(user1)
+  //     .stake(user1.address, "800000000000000000000000");
+  //
+  //   const rewardsForCycle = await rewardDistributor
+  //     .connect(user1)
+  //     .rewardsForACycle(user1.address, 2);
+  //
+  //   // console.log("rewards for cycle", rewardsForCycle);
+  //   expect(parseFloat(rewardsForCycle)).to.gt(0);
+  // });
+  //
+  // it("Check complete reward cycle", async function () {
+  //   rewardAmount = constants.initialMint;
+  //   expect(await rewardDistributor.currentRewardCycle()).to.equal(3);
+  //
+  //   await rewardDistributor.completeRewardCycle(rewardAmount);
+  //   expect(await rewardDistributor.currentRewardCycle()).to.equal(4);
+  //   expect(await rewardDistributor.getTotalRewardsForCycle(1)).to.equal(
+  //     rewardAmount
+  //   );
+  // });
+  //
+  // it("Check Reward with gaps in cycle", async function () {
+  //   rewardAmount = constants.initialMint;
+  //   expect(await rewardDistributor.currentRewardCycle()).to.equal(4);
+  //   await mockStaking.unstake(deployer.address, "400000000000000000000000");
+  //   expect(
+  //     await rewardDistributor.getTotalStakedOrfiOfUserForACycle(deployer.address, 2)
+  //   ).to.gt(0);
+  //   await rewardDistributor.completeRewardCycle(rewardAmount);
+  //   // console.log(await rewardDistributor.rewardsForACycle(deployer.address, 1));
+  //   // console.log(await rewardDistributor.rewardsForACycle(deployer.address, 2));
+  //   // console.log(await rewardDistributor.rewardsForACycle(deployer.address, 3));
+  //   // console.log(await rewardDistributor.rewardsForACycle(deployer.address, 4));
+  //   //
+  //   // console.log(await rewardDistributor.getTotalStakedOrfiOfUserForACycle(deployer.address, 1));
+  //   // console.log(await rewardDistributor.getTotalStakedOrfiOfUserForACycle(deployer.address, 2));
+  //   // console.log(await rewardDistributor.getTotalStakedOrfiOfUserForACycle(deployer.address, 3));
+  //   // console.log(await rewardDistributor.getTotalStakedOrfiOfUserForACycle(deployer.address, 4));
+  //
+  //   // console.log(await rewardDistributor.getTotalStakedOrfiForACycle(4));
+  //
+  // });
 });

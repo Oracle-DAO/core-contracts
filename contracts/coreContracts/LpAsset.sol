@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "../interface/ISwapPair.sol";
 import "../interface/IERC20.sol";
 
-contract LpAssetManager is Ownable {
+contract LpAsset is Ownable {
     event LpDeposited(address indexed account, uint256 amount, uint256 price);
     event LpManaged(address indexed account, uint256 amount);
     ISwapPair public lpAddress;
@@ -32,7 +32,7 @@ contract LpAssetManager is Ownable {
     }
 
     function removeManager(address _manager) external onlyOwner {
-        isManager[_manager] = false;
+        delete isManager[_manager];
     }
 
     function deposit(uint256 amount_) external {
@@ -46,8 +46,7 @@ contract LpAssetManager is Ownable {
     function totalReserves() external view returns(uint256 reserves_) {
         (uint112 _reserve0, uint112 _reserve1,) = lpAddress.getReserves();
         (uint112 reserve0, ) = lpAddress.token0() ==  address(principal) ? (_reserve0, _reserve1) : (_reserve1, _reserve0);
-        uint256 stableCoinReserve = convertInto18DecimalsEquivalent(reserve0);
-        reserves_ = uint256(stableCoinReserve).mul(2);
+        reserves_ =  uint256(reserve0).mul(2);
     }
 
     function totalInvestedAmount() external pure returns(uint256 totalInvestmentAmount_) {
@@ -64,6 +63,6 @@ contract LpAssetManager is Ownable {
     }
 
     function convertInto18DecimalsEquivalent(uint256 _amount) internal view returns(uint256) {
-        return (_amount.mul(1e18)).div(10 ** lpAddress.decimals());
+        return (_amount.mul(1e18)).div(10 ** principal.decimals());
     }
 }

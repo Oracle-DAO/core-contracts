@@ -126,6 +126,8 @@ interface ISwapFactory {
     function createPair(address tokenA, address tokenB)
     external
     returns (address pair);
+
+    function getPair(address tokenA, address tokenB) external view returns (address pair);
 }
 
 interface ISwapRouter {
@@ -158,46 +160,39 @@ contract ORFI is Context, IERC20, IERC20Metadata, VaultOwned {
     mapping(address => bool) lpContractAddresses;
     mapping(address => bool) taxExempt;
 
-    address public pair;
     uint256 public baseSellTax;
     uint256 public multiplier;
-    address public routerAddress;
 
-    constructor(address _mim) {
+    constructor() {
         _name = "Oracle";
         _symbol = "ORFI";
 
         baseSellTax = 18;
         multiplier = 5;
-        ISwapRouter router = ISwapRouter(0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff);
         taxExempt[msg.sender] = true;
     }
 
-    function setRouter(address _router) public onlyOwner{
-        routerAddress = _router;
-    }
-
-    function addTaxExempt(address _add) public onlyOwner {
+    function addTaxExempt(address _add) external onlyOwner {
         require(_add != address(0), 'address is zero');
         taxExempt[_add] = true;
     }
 
-    function removeTaxExempt(address _add) public onlyOwner {
+    function removeTaxExempt(address _add) external onlyOwner {
         require(_add != address(0), 'address is zero');
         delete taxExempt[_add];
     }
 
-    function setBaseSellTax(uint256 _baseSellTax) public onlyOwner {
+    function setBaseSellTax(uint256 _baseSellTax) external onlyOwner {
         require(_baseSellTax <= 30, 'Base Sell Tax Too High');
         baseSellTax = _baseSellTax;
     }
 
-    function setMultiplier(uint256 _multiplier) public onlyOwner {
-        require(_multiplier <= 15, 'MultiPlier Too High');
+    function setMultiplier(uint256 _multiplier) external onlyOwner {
+        require(_multiplier <= 15, 'Multiplier Too High');
         multiplier = _multiplier;
     }
 
-    function addLpContractAddress(address lpAddress) public onlyOwner {
+    function addLpContractAddress(address lpAddress) external onlyOwner {
         require(lpAddress != address(0), 'lp address is zero');
         lpContractAddresses[lpAddress] = true;
     }
@@ -206,14 +201,8 @@ contract ORFI is Context, IERC20, IERC20Metadata, VaultOwned {
         _mint(account, amount);
     }
 
-    function burnFrom(address account_, uint256 amount_) external {
-        _burnFrom(account_, amount_);
-    }
-
-    function _burnFrom(address account_, uint256 amount_) internal {
-        uint256 decreasedAllowance_ = allowance(account_, msg.sender).sub(amount_);
-        _approve(account_, msg.sender, decreasedAllowance_);
-        _burn(account_, amount_);
+    function burn(uint256 amount_) external {
+        _burn(msg.sender, amount_);
     }
 
     function name() public view virtual override returns (string memory) {

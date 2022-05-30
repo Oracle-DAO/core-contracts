@@ -3,13 +3,18 @@ import { ethers } from "hardhat";
 import { readContractAddress, saveFrontendFiles } from "../helpers";
 
 async function main() {
-  const orfiAddress = readContractAddress("/ORFI.json");
+  readContractAddress("/ORFI.json");
   const sORFIAddress = readContractAddress("/StakedORFI.json");
-  const treasuryAdd = readContractAddress("/Treasury.json");
+  readContractAddress("/Treasury.json");
   const stakingAdd = readContractAddress("/Staking.json");
 
-  const RewardDistributorFact = await ethers.getContractFactory("RewardDistributor");
-  const rewardDistributor = await RewardDistributorFact.deploy(stakingAdd, sORFIAddress);
+  const RewardDistributorFact = await ethers.getContractFactory(
+    "RewardDistributor"
+  );
+  const rewardDistributor = await RewardDistributorFact.deploy(
+    stakingAdd,
+    sORFIAddress
+  );
   await rewardDistributor.deployed();
 
   console.log("Token address of rewardDistributor:", rewardDistributor.address);

@@ -6,7 +6,7 @@ import { constants } from "../constants";
 async function main() {
   // ethers is avaialble in the global scope
   const orfiAddress = readContractAddress("/ORFI.json");
-  const mimAddress = readContractAddress("/mim.json");
+  const mimAddress = readContractAddress("/MIM.json");
 
   const TreasuryHelper = await ethers.getContractFactory("TreasuryHelper");
   const treasuryHelper = await TreasuryHelper.deploy(

@@ -8,12 +8,15 @@ import "../library/FixedPoint.sol";
 import "../library/LowGasSafeMath.sol";
 
 contract TAVCalculator {
+    event AssetManagerAdded(address indexed assetManagerAddress);
+
     using FixedPoint for *;
     using LowGasSafeMath for uint256;
     using LowGasSafeMath for uint32;
     IORFI public immutable ORFI;
     address[] assetManagers;
     address public _owner;
+    mapping(address => bool) blacklistedAddress;
 
     constructor(address _orfi, address _treasury) {
         _owner = msg.sender;
@@ -23,11 +26,25 @@ contract TAVCalculator {
         assetManagers.push(_treasury);
     }
 
+    function blacklistAddress(address account_) external {
+        require(msg.sender == _owner, 'Invalid Caller');
+        require(account_ != address(0));
+        blacklistedAddress[account_] = true;
+    }
+
+    function whitelistAddress(address account_) external {
+        require(msg.sender == _owner, 'Invalid Caller');
+        require(account_ != address(0));
+        delete blacklistedAddress[account_];
+    }
+
     function calculateTAV() external view returns (uint256 _TAV) {
         uint256 orfiTotalSupply = ORFI.totalSupply();
         uint256 totalReserve = 0;
         for (uint256 i = 0; i < assetManagers.length; i++) {
-            totalReserve += IAssetManager(assetManagers[i]).totalReserves();
+            if(!blacklistedAddress[address(assetManagers[i])]){
+                totalReserve += IAssetManager(assetManagers[i]).totalReserves();
+            }
         }
         _TAV = calculateTAV(totalReserve, orfiTotalSupply);
     }
@@ -39,6 +56,7 @@ contract TAVCalculator {
     function addAssetManager(address assetManager_) external {
         require(msg.sender == _owner, 'Invalid Caller');
         require(assetManager_ != address(0));
+        emit AssetManagerAdded(assetManager_);
         assetManagers.push(assetManager_);
     }
 }

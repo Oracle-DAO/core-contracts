@@ -116,10 +116,11 @@ contract Treasury is Ownable {
         require(ITreasuryHelper(treasuryHelper).isReserveToken(_token), 'NA');
         require(ITreasuryHelper(treasuryHelper).isReserveSpender(msg.sender), 'NApproved');
 
-        uint256 orfiToBurn = orfiEqValue(valueOfToken(_token, _amount, true, false));
+        uint256 value = valueOfToken(_token, _amount, true, false);
+        uint256 orfiToBurn = orfiEqValue(value);
 
         _totalORFIMinted = _totalORFIMinted.sub(orfiToBurn);
-        _totalReserves = _totalReserves.sub(_amount);
+        _totalReserves = _totalReserves.sub(value);
         emit ReservesUpdated(_totalReserves);
 
         IORFI(ORFI).burnFrom(msg.sender, orfiToBurn);
@@ -143,7 +144,8 @@ contract Treasury is Ownable {
             require(ITreasuryHelper(treasuryHelper).isReserveManager(msg.sender), 'NApproved');
         }
 
-        _totalReserves = _totalReserves.sub(_amount);
+        uint256 value = valueOfToken(_token, _amount, isReserveToken, isLPToken);
+        _totalReserves = _totalReserves.sub(value);
         emit ReservesUpdated(_totalReserves);
         IERC20(_token).safeTransfer(msg.sender, _amount);
         emit ReservesManaged(_token, _amount);

@@ -112,11 +112,36 @@ contract RewardDistributor is Ownable {
         emit RedeemedRewards(account_, rewards, rewardCycle_);
     }
 
+//    // TODO: Won't be able to fetch data for cycles with gap
+//    function rewardsForACycle(address account_, uint8 rewardCycle_) public view returns(uint256) {
+//        require(account_ != address(0));
+//        require(rewardCycle_ < currentRewardCycle, "Invalid Reward Cycle");
+//
+//        UserStakeInfo memory userStakeInfo = _userStakeInfoToRewardCycleMapping[account_][rewardCycle_];
+//
+//        require(!userStakeInfo.redeemed, "User Has already Redeemed");
+//        require(userStakeInfo.stakedOrfiAmount > 0, "Staked Amount is 0");
+//
+//        RewardCycle memory rewardCycle = _rewardCycleMapping[rewardCycle_];
+//        uint32 cycleLength = rewardCycle.endTimestamp.sub32(rewardCycle.startTimestamp);
+//        uint256 investedTimeInCycle = averageTimeInCycle(cycleLength, userStakeInfo.averageInvestedTime);
+//        uint256 stakedOrfiPortion = calculateStakeOrfiPortion(userStakeInfo.stakedOrfiAmount, rewardCycle.totalStakedOrfiAmount);
+//
+//        return calculateRewards(investedTimeInCycle, stakedOrfiPortion, rewardCycle.totalAllocatedRewards);
+//    }
+
     function rewardsForACycle(address account_, uint8 rewardCycle_) public view returns(uint256) {
         require(account_ != address(0));
         require(rewardCycle_ < currentRewardCycle, "Invalid Reward Cycle");
+        uint8 recentActivityCycle = _userActivityMapping[account_];
 
-        UserStakeInfo memory userStakeInfo = _userStakeInfoToRewardCycleMapping[account_][rewardCycle_];
+        UserStakeInfo memory userStakeInfo;
+        if(rewardCycle_ > recentActivityCycle){
+            userStakeInfo = _userStakeInfoToRewardCycleMapping[account_][recentActivityCycle];
+        }
+        else{
+            userStakeInfo = _userStakeInfoToRewardCycleMapping[account_][rewardCycle_];
+        }
 
         require(!userStakeInfo.redeemed, "User Has already Redeemed");
         require(userStakeInfo.stakedOrfiAmount > 0, "Staked Amount is 0");
