@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: Apache 2.0
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -42,12 +42,23 @@ contract StakedORFI is Context, ERC20{
         _burn(to, amount);
     }
 
+    /**
+   *  @notice Only stakingContract can transfer sORFI
+   *  @param to address
+   *  @param amount uint256
+   */
     function transfer(address to, uint256 amount) public override onlyStakingContract returns (bool) {
          address owner = _msgSender();
         _transfer(owner, to, amount);
         return true;
     }
 
+    /**
+   *  @notice Only stakingContract can transfer sORFI
+   *  @param from address
+   *  @param to address
+   *  @param amount uint256
+   */
     function transferFrom(
         address from,
         address to,

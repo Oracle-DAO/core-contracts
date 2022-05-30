@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: Apache 2.0
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
@@ -12,6 +12,8 @@ import "../library/FixedPoint.sol";
 import "../library/SafeERC20.sol";
 import "../library/LowGasSafeMath.sol";
 import "../interface/IStaking.sol";
+import "hardhat/console.sol";
+
 
 
 contract Bond is Ownable {
@@ -156,7 +158,7 @@ contract Bond is Ownable {
     ) external onlyOwner {
         require(terms.controlVariable == 0, 'Bonds must be initialized from 0');
         require(_controlVariable >= 0, 'Can lock adjustment');
-        require(_maxPayout <= 1000, 'Payout cannot be above 1 percent');
+        require(_maxPayout <= 10000, 'Payout cannot be above 10 percent');
         require(_vestingTerm >= 10, 'Vesting must be longer than 36 hours');
         require(_fee <= 10000, 'DAO fee cannot exceed payout');
         require(_bondingRewardFee <= 10000, 'Bonding reward fee cannot be above 10%');
@@ -177,11 +179,11 @@ contract Bond is Ownable {
     function setBondTerms(PARAMETER _parameter, uint256 _input) external onlyOwner {
         if (_parameter == PARAMETER.VESTING) {
             // 0
-            require(_input >= 259200, 'Vesting must be longer than 36 hours');
+            require(_input >= 86400, 'Vesting must be longer than 36 hours');
             terms.vestingTerm = uint32(_input);
         } else if (_parameter == PARAMETER.MAX_PAYOUT) {
             // 1
-            require(_input <= 1000, 'Payout cannot be above 1 percent');
+            require(_input <= 10000, 'Payout cannot be above 10 percent');
             terms.maxPayout = _input;
         } else if (_parameter == PARAMETER.FEE) {
             // 2
@@ -212,11 +214,11 @@ contract Bond is Ownable {
         uint32 _buffer
     ) external onlyOwner {
         require(
-            _increment <= terms.controlVariable.mul(25) / 1000,
+            _increment <= terms.controlVariable.mul(500) / 1000,
             'Increment too large'
         );
-        require(_maxTarget >= 250, 'Next Adjustment could be locked');
-        require(_minTarget <= 250, 'Next Adjustment could be locked');
+        require(_maxTarget >= 1000, 'Next Adjustment could be locked');
+        require(_minTarget <= 1000, 'Next Adjustment could be locked');
         adjustment = Adjust({
             add: _addition,
             rate: _increment,
@@ -266,6 +268,7 @@ contract Bond is Ownable {
         uint256 priceInUSD = bondPriceInUSD(); // Stored in bond info
         bondingReward = bondingReward.add(calculateBondingReward()); // calculate bonding rewards
 
+        console.log(priceInUSD);
         require(_maxPrice >= priceInUSD, 'Slippage limit: more than max price'); // slippage protection
 
         uint256 payout = payoutFor(amount); // payout to bonder is computed in 1e18

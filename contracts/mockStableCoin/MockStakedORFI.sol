@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: Apache 2.0
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -14,6 +14,10 @@ contract MockStakedORFI is Ownable, ERC20 {
 
     function mint(address account, uint256 amount) external {
         _mint(account, amount);
+    }
+
+    function burn(address to, uint256 amount) external virtual {
+        _burn(to, amount);
     }
 
     function burnFrom(address account_, uint256 amount_) external virtual {

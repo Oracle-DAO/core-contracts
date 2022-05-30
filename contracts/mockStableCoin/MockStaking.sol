@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: Apache 2.0
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
@@ -144,6 +144,7 @@ contract MockStaking is Ownable {
   ) external returns (uint256 amount_) {
     sORFI.burn(msg.sender, _amount);
     require(_amount <= ORFI.balanceOf(address(this)), "Insufficient ORFI balance in contract");
+    rewardDistributor.unstake(_to, _amount);
     ORFI.safeTransfer(_to, _amount);
     return _amount;
   }

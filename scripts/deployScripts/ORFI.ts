@@ -6,10 +6,6 @@ import { saveFrontendFiles } from "../helpers";
 // yours, or create new ones.
 async function main() {
   const [deployer] = await ethers.getSigners();
-  console.log(
-    "Deploying the contracts with the account:",
-    await deployer.address
-  );
 
   const ORFI = await ethers.getContractFactory("ORFI");
   const orfi = await ORFI.deploy();
