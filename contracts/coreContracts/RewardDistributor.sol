@@ -128,7 +128,6 @@ contract RewardDistributor is Ownable {
         }
 
         require(!userStakeInfo.redeemed, "User Has already Redeemed");
-        require(userStakeInfo.stakedOrfiAmount > 0, "Staked Amount is 0");
 
         RewardCycle memory rewardCycle = _rewardCycleMapping[rewardCycle_];
         uint32 cycleLength = rewardCycle.endTimestamp.sub32(rewardCycle.startTimestamp);
