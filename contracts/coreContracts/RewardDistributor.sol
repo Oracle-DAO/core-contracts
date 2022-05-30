@@ -36,7 +36,7 @@ contract RewardDistributor is Ownable {
     }
 
     uint8 public currentRewardCycle;
-    mapping(uint8 => RewardCycle) private _rewardCycleMapping;
+    mapping(uint8 => RewardCycle) public _rewardCycleMapping;
     mapping(address => uint8) private _userRecentRedeemMapping;
     mapping(address => mapping(uint8 => UserStakeInfo)) public _userStakeInfoToRewardCycleMapping;
     mapping(address => uint8) public _userActivityMapping;
@@ -76,6 +76,7 @@ contract RewardDistributor is Ownable {
     function completeRewardCycle(uint256 rewardAmount) external onlyOwner {
         require(rewardAmount > 0);
         RewardCycle memory rewardCycle = _rewardCycleMapping[currentRewardCycle];
+        require(rewardCycle.startTimestamp < uint256(block.timestamp), "The cycle endTime should be GT startime");
         rewardCycle.endTimestamp = uint32(block.timestamp);
         rewardCycle.totalAllocatedRewards = rewardAmount;
         rewardCycle.totalStakedOrfiAmount = IERC20(_stakedOrfiAddress).totalSupply();
@@ -112,24 +113,6 @@ contract RewardDistributor is Ownable {
         emit RedeemedRewards(account_, rewards, rewardCycle_);
     }
 
-//    // TODO: Won't be able to fetch data for cycles with gap
-//    function rewardsForACycle(address account_, uint8 rewardCycle_) public view returns(uint256) {
-//        require(account_ != address(0));
-//        require(rewardCycle_ < currentRewardCycle, "Invalid Reward Cycle");
-//
-//        UserStakeInfo memory userStakeInfo = _userStakeInfoToRewardCycleMapping[account_][rewardCycle_];
-//
-//        require(!userStakeInfo.redeemed, "User Has already Redeemed");
-//        require(userStakeInfo.stakedOrfiAmount > 0, "Staked Amount is 0");
-//
-//        RewardCycle memory rewardCycle = _rewardCycleMapping[rewardCycle_];
-//        uint32 cycleLength = rewardCycle.endTimestamp.sub32(rewardCycle.startTimestamp);
-//        uint256 investedTimeInCycle = averageTimeInCycle(cycleLength, userStakeInfo.averageInvestedTime);
-//        uint256 stakedOrfiPortion = calculateStakeOrfiPortion(userStakeInfo.stakedOrfiAmount, rewardCycle.totalStakedOrfiAmount);
-//
-//        return calculateRewards(investedTimeInCycle, stakedOrfiPortion, rewardCycle.totalAllocatedRewards);
-//    }
-
     function rewardsForACycle(address account_, uint8 rewardCycle_) public view returns(uint256) {
         require(account_ != address(0));
         require(rewardCycle_ < currentRewardCycle, "Invalid Reward Cycle");
@@ -138,6 +121,7 @@ contract RewardDistributor is Ownable {
         UserStakeInfo memory userStakeInfo;
         if(rewardCycle_ > recentActivityCycle){
             userStakeInfo = _userStakeInfoToRewardCycleMapping[account_][recentActivityCycle];
+            userStakeInfo.averageInvestedTime = 0;
         }
         else{
             userStakeInfo = _userStakeInfoToRewardCycleMapping[account_][rewardCycle_];
@@ -257,6 +241,5 @@ contract RewardDistributor is Ownable {
     function getTotalStakedOrfiForACycle(uint8 rewardCycle) external view returns(uint256 amount_) {
         amount_ = _rewardCycleMapping[rewardCycle].totalStakedOrfiAmount;
     }
-
 
 }

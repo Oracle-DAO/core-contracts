@@ -59,13 +59,32 @@ async function main() {
   //
   // console.log(await mimBond.floorPriceValue());
 
-  console.log(await rewardDistributor.getTotalStakedOrfiOfUserForACycle(deployer.address, 1));
+  // console.log(await rewardDistributor.getTotalStakedOrfiOfUserForACycle(deployer.address, 1));
 
-  console.log(await rewardDistributor.rewardsForACycle(deployer.address, 1));
+  // // console.log("2:", await rewardDistributor.rewardsForACycle(deployer.address, 2));
+  // // console.log("3:", await rewardDistributor.rewardsForACycle(deployer.address, 3));
+  console.log(await rewardDistributor.currentRewardCycle());
+  // console.log("1:", await rewardDistributor.getTotalRewardsForUser("0xE22994f609394EfFcD2c24520CaB1e968Da47D4a"));
+  //
+  // console.log(await rewardDistributor._userStakeInfoToRewardCycleMapping(deployer.address, 1));
+  // // console.log(await rewardDistributor._(deployer.address, 4));
+  console.log(await rewardDistributor._userActivityMapping("0xE22994f609394EfFcD2c24520CaB1e968Da47D4a")); // 1
+  // console.log(await rewardDistributor._userStakeInfoToRewardCycleMapping(deployer.address, 2));
+  // // console.log(await rewardDistributor._userStakeInfoToRewardCycleMapping(deployer.address, 3));
+  //
+  // console.log("1", await rewardDistributor._rewardCycleMapping(1));
+  // console.log("2", await rewardDistributor._rewardCycleMapping(2));
+  //
+  // console.log(await rewardDistributor._userStakeInfoToRewardCycleMapping(deployer.address, 3));
+
+
+  // console.log("4:", await rewardDistributor.rewardsForACycle(deployer.address, 4));
 
   console.log(await treasury.totalReserves());
 
-  await mimBond.setAdjustment(true, 100, 3000, 100, 1);
+  // await rewardDistributor.redeemRewardsForACycle(deployer.address, 4, {gasLimit: 1000000000});
+
+  // await mimBond.setBondTerms(0, 259200);
 
   // await mimBond.setBondTerms(0, 2400);
 
@@ -88,7 +107,9 @@ async function main() {
   // console.log(await mimBond.terms());
 
   // console.log("tav : ", await tavCalculator.calculateTAV());
-  //
+  // //
+  // console.log("tav : ", await orfi.totalSupply());
+  // //
   // console.log("total reserves of LP", await LpAsset.totalReserves());
   //
   // console.log("total reserves of Treasury", await treasury.totalReserves());

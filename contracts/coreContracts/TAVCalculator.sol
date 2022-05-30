@@ -46,10 +46,10 @@ contract TAVCalculator {
                 totalReserve += IAssetManager(assetManagers[i]).totalReserves();
             }
         }
-        _TAV = calculateTAV(totalReserve, orfiTotalSupply);
+        _TAV = calculateTAVRatio(totalReserve, orfiTotalSupply);
     }
 
-    function calculateTAV(uint256 totalReserve, uint256 totalORFISupply) internal pure returns(uint256) {
+    function calculateTAVRatio(uint256 totalReserve, uint256 totalORFISupply) internal pure returns(uint256) {
         return (FixedPoint.fraction(totalReserve, totalORFISupply).decode112with18() / 1e9);
     }
 

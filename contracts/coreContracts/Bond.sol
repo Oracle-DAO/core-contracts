@@ -179,7 +179,7 @@ contract Bond is Ownable {
     function setBondTerms(PARAMETER _parameter, uint256 _input) external onlyOwner {
         if (_parameter == PARAMETER.VESTING) {
             // 0
-            require(_input >= 259200, 'Vesting must be longer than 36 hours');
+            require(_input >= 86400, 'Vesting must be longer than 36 hours');
             terms.vestingTerm = uint32(_input);
         } else if (_parameter == PARAMETER.MAX_PAYOUT) {
             // 1
