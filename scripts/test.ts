@@ -55,6 +55,8 @@ async function main() {
       LpAssetAdd
   );
 
+  console.log(await sORFI.stakingContract());
+
   // console.log(await mimBond.bondPrice());
   //
   // console.log(await mimBond.floorPriceValue());
@@ -67,8 +69,8 @@ async function main() {
   // console.log("3:", await rewardDistributor.rewardsForACycle("0xe10293396F0Ec3D4A0ED7e3042d7C3174955E009", 7));
   // console.log("3:", await rewardDistributor.rewardsForACycle("0xe10293396F0Ec3D4A0ED7e3042d7C3174955E009", 8));
 
-  console.log(await rewardDistributor.currentRewardCycle());
-  console.log("1:", await rewardDistributor.getTotalRewardsForUser("0xe10293396F0Ec3D4A0ED7e3042d7C3174955E009"));
+  // console.log(await rewardDistributor.currentRewardCycle());
+  // console.log("1:", await rewardDistributor.getTotalRewardsForUser("0xe10293396F0Ec3D4A0ED7e3042d7C3174955E009"));
   //
   // console.log(await rewardDistributor._userStakeInfoToRewardCycleMapping(deployer.address, 1));
   // // console.log(await rewardDistributor._(deployer.address, 4));
@@ -84,7 +86,7 @@ async function main() {
 
   // console.log("4:", await rewardDistributor.rewardsForACycle(deployer.address, 4));
 
-  console.log(await treasury.totalReserves());
+  // console.log(await treasury.totalReserves());
 
   // await rewardDistributor.redeemRewardsForACycle(deployer.address, 4, {gasLimit: 1000000000});
 

@@ -22,33 +22,33 @@ async function main() {
     RewardDistributorAdd
   );
 
-  // bond depository address will go here
-  await treasuryHelper.queue("0", mimBond.address);
-  console.log("step 11");
-
-  // bond depository address will go here
-  await treasuryHelper.toggle("0", mimBond.address, constants.zeroAddress);
-  console.log("step 12");
-
-  // temporary deployer address for testing
-  await treasuryHelper.queue("0", deployer.address);
-  console.log("step 13");
-
-  // temporary deployer address for testing
-  await treasuryHelper.toggle("0", deployer.address, constants.zeroAddress);
-  console.log("step 14");
-
-  // reserve spender address will go here. They will burn ORFI. Only for testing
-  await treasuryHelper.queue("1", deployer.address);
-  console.log("step 15");
-
-  // reserve spender address will go here
-  await treasuryHelper.toggle("1", deployer.address, constants.zeroAddress);
-  console.log("step 16");
-
-  // reserve manager address will go here. They will allocate money using manage function in treasury. Gnosis will go here
-  await treasuryHelper.queue("3", deployer.address);
-  console.log("step 17");
+  // // bond depository address will go here
+  // await treasuryHelper.queue("0", mimBond.address);
+  // console.log("step 11");
+  //
+  // // bond depository address will go here
+  // await treasuryHelper.toggle("0", mimBond.address, constants.zeroAddress);
+  // console.log("step 12");
+  //
+  // // temporary deployer address for testing
+  // await treasuryHelper.queue("0", deployer.address);
+  // console.log("step 13");
+  //
+  // // temporary deployer address for testing
+  // await treasuryHelper.toggle("0", deployer.address, constants.zeroAddress);
+  // console.log("step 14");
+  //
+  // // reserve spender address will go here. They will burn ORFI. Only for testing
+  // await treasuryHelper.queue("1", deployer.address);
+  // console.log("step 15");
+  //
+  // // reserve spender address will go here
+  // await treasuryHelper.toggle("1", deployer.address, constants.zeroAddress);
+  // console.log("step 16");
+  //
+  // // reserve manager address will go here. They will allocate money using manage function in treasury. Gnosis will go here
+  // await treasuryHelper.queue("3", deployer.address);
+  // console.log("step 17");
 
   // reserve manager address will go here. They will allocate money
   await treasuryHelper.toggle("3", deployer.address, constants.zeroAddress);

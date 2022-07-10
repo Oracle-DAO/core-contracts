@@ -33,9 +33,9 @@ const config: HardhatUserConfig = {
     polygon: {
       url: "https://polygon-mainnet.g.alchemy.com/v2/-uRy8IMZxGnHG4EeeXSfBxzdjFxac4j4",
       accounts:
-        process.env.PREPROD_PRIVATE_KEY !== undefined &&
+        process.env.PRIVATE_KEY !== undefined &&
         process.env.TEAM_FEES_PRIVATE_KEY !== undefined
-          ? [process.env.PREPROD_PRIVATE_KEY, process.env.TEAM_FEES_PRIVATE_KEY]
+          ? [process.env.PRIVATE_KEY, process.env.TEAM_FEES_PRIVATE_KEY]
           : [],
     },
     mumbai: {

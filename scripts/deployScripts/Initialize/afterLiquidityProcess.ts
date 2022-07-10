@@ -20,9 +20,9 @@ async function main() {
   const TAVCalculator = await ethers.getContractFactory("TAVCalculator");
   const tavCalculator = await TAVCalculator.attach(tavCalculatorAdd);
 
-  await orfi.addLpContractAddress(constants.lpAddress);
-
-  await LpManager.addLpAssetManager(lpAssetAdd);
+  // await orfi.addLpContractAddress(constants.lpAddress);
+  //
+  // await LpManager.addLpAssetManager(lpAssetAdd);
 
   await tavCalculator.addAssetManager(lpManagerAdd);
 }

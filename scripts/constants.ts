@@ -19,7 +19,7 @@ export class constants {
   public static maxBondDebt = "1000000000000000000000000";
   public static adjustmentIncrement = "3";
   public static blockNeededToWait = "0";
-  public static lpAddress = "";
+  public static lpAddress = "0x2Fd795f46D69e4B1d756F16EE76Abf0835EB213C";
   public static principalToken = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F";
   public static nttContractAddress = "0x57e54A873382F9758f1F6dE9790f50c1F50c67C9";
   public static usdtAddress = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F";
