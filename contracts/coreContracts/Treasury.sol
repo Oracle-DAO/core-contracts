@@ -3,15 +3,214 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 
-import "../interface/ITreasuryHelper.sol";
-import "../interface/IBondCalculator.sol";
-import "../interface/ITAVCalculator.sol";
-import "../interface/IORFI.sol";
-import "../interface/IERC20.sol";
+library FullMath {
+    function fullMul(uint256 x, uint256 y)
+    private
+    pure
+    returns (uint256 l, uint256 h)
+    {
+        uint256 mm = mulmod(x, y, type(uint256).max);
+        l = x * y;
+        h = mm - l;
+        if (mm < l) h -= 1;
+    }
 
-import "../library/SafeERC20.sol";
-import "../library/FixedPoint.sol";
+    function fullDiv(
+        uint256 l,
+        uint256 h,
+        uint256 d
+    ) private pure returns (uint256) {
+        uint256 pow2 = d & (~d+1);
+        d /= pow2;
+        l /= pow2;
+        l += h * ((~pow2+1) / pow2 + 1);
+        uint256 r = 1;
+        r *= 2 - d * r;
+        r *= 2 - d * r;
+        r *= 2 - d * r;
+        r *= 2 - d * r;
+        r *= 2 - d * r;
+        r *= 2 - d * r;
+        r *= 2 - d * r;
+        r *= 2 - d * r;
+        return l * r;
+    }
+
+    function mulDiv(
+        uint256 x,
+        uint256 y,
+        uint256 d
+    ) internal pure returns (uint256) {
+        (uint256 l, uint256 h) = fullMul(x, y);
+        uint256 mm = mulmod(x, y, d);
+        if (mm > l) h -= 1;
+        l -= mm;
+        require(h < d, 'FullMath::mulDiv: overflow');
+        return fullDiv(l, h, d);
+    }
+}
+
+library FixedPoint {
+    struct uq112x112 {
+        uint224 _x;
+    }
+
+    struct uq144x112 {
+        uint256 _x;
+    }
+
+    uint8 private constant RESOLUTION = 112;
+    uint256 private constant Q112 = 0x10000000000000000000000000000;
+    uint256 private constant Q224 =
+    0x100000000000000000000000000000000000000000000000000000000;
+    uint256 private constant LOWER_MASK = 0xffffffffffffffffffffffffffff; // decimal of UQ*x112 (lower 112 bits)
+
+    function decode(uq112x112 memory self) internal pure returns (uint112) {
+        return uint112(self._x >> RESOLUTION);
+    }
+
+    function decode112with18(uq112x112 memory self)
+    internal
+    pure
+    returns (uint256)
+    {
+        return uint256(self._x) / 5192296858534827;
+    }
+
+    function fraction(uint256 numerator, uint256 denominator)
+    internal
+    pure
+    returns (uq112x112 memory)
+    {
+        require(denominator > 0, 'FixedPoint::fraction: division by zero');
+        if (numerator == 0) return FixedPoint.uq112x112(0);
+
+        if (numerator <= type(uint144).max) {
+            uint256 result = (numerator << RESOLUTION) / denominator;
+            require(result <= type(uint224).max, 'FixedPoint::fraction: overflow');
+            return uq112x112(uint224(result));
+        } else {
+            uint256 result = FullMath.mulDiv(numerator, Q112, denominator);
+            require(result <= type(uint224).max, 'FixedPoint::fraction: overflow');
+            return uq112x112(uint224(result));
+        }
+    }
+}
+
+library SafeERC20 {
+    using SafeMath for uint256;
+    using Address for address;
+
+    function safeTransfer(
+        IERC20 token,
+        address to,
+        uint256 value
+    ) internal {
+        _callOptionalReturn(
+            token,
+            abi.encodeWithSelector(token.transfer.selector, to, value)
+        );
+    }
+
+    function safeTransferFrom(
+        IERC20 token,
+        address from,
+        address to,
+        uint256 value
+    ) internal {
+        _callOptionalReturn(
+            token,
+            abi.encodeWithSelector(token.transferFrom.selector, from, to, value)
+        );
+    }
+
+    function _callOptionalReturn(IERC20 token, bytes memory data) private {
+        bytes memory returndata = address(token).functionCall(
+            data,
+            'SafeERC20: low-level call failed'
+        );
+        if (returndata.length > 0) {
+            // Return data is optional
+            // solhint-disable-next-line max-line-length
+            require(
+                abi.decode(returndata, (bool)),
+                'SafeERC20: ERC20 operation did not succeed'
+            );
+        }
+    }
+}
+
+interface IERC20 {
+
+    function totalSupply() external view returns (uint256);
+
+    function decimals() external view returns (uint8);
+
+    function balanceOf(address account) external view returns (uint256);
+
+    function transfer(address to, uint256 amount) external returns (bool);
+
+    function allowance(address owner, address spender) external view returns (uint256);
+
+    function approve(address spender, uint256 amount) external returns (bool);
+
+    function mint(address to, uint256 amount) external;
+
+    function burn(address to, uint256 amount) external;
+
+    function transferFrom(
+        address from,
+        address to,
+        uint256 amount
+    ) external returns (bool);
+
+    event Transfer(address indexed from, address indexed to, uint256 value);
+
+    event Approval(address indexed owner, address indexed spender, uint256 value);
+}
+
+interface IORFI {
+    function burnFrom(address account_, uint256 amount_) external;
+
+    function mint(address account_, uint256 amount_) external;
+
+    function totalSupply() external view returns (uint256);
+}
+
+interface ITAVCalculator {
+    function calculateTAV() external view returns (uint256 _TAV);
+}
+
+interface IBondCalculator {
+    function valuation(address _LP, uint256 _amount)
+    external
+    view
+    returns (uint256);
+
+    function markdown(address _LP) external view returns (uint256);
+}
+
+interface ITreasuryHelper {
+    function isReserveToken(address token_) external view returns (bool);
+
+    function isReserveDepositor(address token_) external view returns (bool);
+
+    function isReserveSpender(address token_) external view returns (bool);
+
+    function isLiquidityToken(address token_) external view returns (bool);
+
+    function isLiquidityDepositor(address token_) external view returns (bool);
+
+    function isReserveManager(address token_) external view returns (bool);
+
+    function isLiquidityManager(address token_) external view returns (bool);
+
+    function isDebtor(address token_) external view returns (bool);
+
+    function isRewardManager(address token_) external view returns (bool);
+}
 
 contract Treasury is Ownable {
     using FixedPoint for *;

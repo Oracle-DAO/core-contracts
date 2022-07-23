@@ -3,9 +3,85 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "../library/SafeERC20.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 
-import "../interface/IRewardDistributor.sol";
+interface IRewardDistributor {
+  function stake(address to_, uint256 amount) external;
+
+  function unstake(address to_, uint256 amount) external;
+}
+
+interface IERC20 {
+
+  function totalSupply() external view returns (uint256);
+
+  function decimals() external view returns (uint8);
+
+  function balanceOf(address account) external view returns (uint256);
+
+  function transfer(address to, uint256 amount) external returns (bool);
+
+  function allowance(address owner, address spender) external view returns (uint256);
+
+  function approve(address spender, uint256 amount) external returns (bool);
+
+  function mint(address to, uint256 amount) external;
+
+  function burn(address to, uint256 amount) external;
+
+  function transferFrom(
+    address from,
+    address to,
+    uint256 amount
+  ) external returns (bool);
+
+  event Transfer(address indexed from, address indexed to, uint256 value);
+
+  event Approval(address indexed owner, address indexed spender, uint256 value);
+}
+
+library SafeERC20 {
+  using SafeMath for uint256;
+  using Address for address;
+
+  function safeTransfer(
+    IERC20 token,
+    address to,
+    uint256 value
+  ) internal {
+    _callOptionalReturn(
+      token,
+      abi.encodeWithSelector(token.transfer.selector, to, value)
+    );
+  }
+
+  function safeTransferFrom(
+    IERC20 token,
+    address from,
+    address to,
+    uint256 value
+  ) internal {
+    _callOptionalReturn(
+      token,
+      abi.encodeWithSelector(token.transferFrom.selector, from, to, value)
+    );
+  }
+
+  function _callOptionalReturn(IERC20 token, bytes memory data) private {
+    bytes memory returndata = address(token).functionCall(
+      data,
+      'SafeERC20: low-level call failed'
+    );
+    if (returndata.length > 0) {
+      // Return data is optional
+      // solhint-disable-next-line max-line-length
+      require(
+        abi.decode(returndata, (bool)),
+        'SafeERC20: ERC20 operation did not succeed'
+      );
+    }
+  }
+}
 
 contract Staking is Ownable {
   /* ========== DEPENDENCIES ========== */

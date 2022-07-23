@@ -61,6 +61,14 @@ const config: HardhatUserConfig = {
           ? [process.env.TEST_PTIVATE_KEY, process.env.TEAM_FEES_PRIVATE_KEY]
           : [],
     },
+    oasis_mainnet: {
+      url: "https://emerald.oasis.dev",
+      accounts:
+        process.env.PRIVATE_KEY !== undefined &&
+        process.env.TEAM_FEES_PRIVATE_KEY !== undefined
+          ? [process.env.PRIVATE_KEY, process.env.TEAM_FEES_PRIVATE_KEY]
+          : [],
+    },
   },
   gasReporter: {
     enabled: process.env.REPORT_GAS !== undefined,

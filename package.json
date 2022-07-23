@@ -37,6 +37,7 @@
     "@openzeppelin/contracts": "^4.5.0",
     "@openzeppelin/contracts-upgradeable": "^4.5.1",
     "@poanet/solidity-flattener": "^3.0.7",
-    "hardhat-tracer": "^1.0.0-alpha.6"
+    "hardhat-tracer": "^1.0.0-alpha.6",
+    "tronbox": "^2.7.25"
   }
 }

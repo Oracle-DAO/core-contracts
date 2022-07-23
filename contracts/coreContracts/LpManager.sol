@@ -2,8 +2,13 @@
 
 pragma solidity ^0.8.0;
 
-import "../interface/IAssetManager.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+
+interface IAssetManager {
+    function totalReserves() external view returns(uint256);
+
+    function totalInvestedAmount() external view returns(uint256);
+}
 
 contract LpManager is Ownable {
     event LpAssetAdded(address indexed lpAssetAddress);

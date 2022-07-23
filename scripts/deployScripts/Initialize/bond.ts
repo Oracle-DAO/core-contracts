@@ -38,7 +38,7 @@ async function main() {
 
   console.log("Staking address set completed");
 
-  await mimBond.setFloorPriceValue(constants.floorPrice);
+  // await mimBond.setFloorPriceValue(constants.floorPrice);
 }
 
 main().catch((error) => {
