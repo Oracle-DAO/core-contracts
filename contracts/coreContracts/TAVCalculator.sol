@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-interface IORFI {
+interface ICHRF {
     function burnFrom(address account_, uint256 amount_) external;
 
     function mint(address account_, uint256 amount_) external;
@@ -198,15 +198,15 @@ contract TAVCalculator {
     using FixedPoint for *;
     using LowGasSafeMath for uint256;
     using LowGasSafeMath for uint32;
-    IORFI public immutable ORFI;
+    ICHRF public immutable CHRF;
     address[] assetManagers;
     address public _owner;
     mapping(address => bool) blacklistedAddress;
 
-    constructor(address _orfi, address _treasury) {
+    constructor(address _chrf, address _treasury) {
         _owner = msg.sender;
-        require(_orfi != address(0));
-        ORFI = IORFI(_orfi);
+        require(_chrf != address(0));
+        CHRF = ICHRF(_chrf);
         require(_treasury != address(0));
         assetManagers.push(_treasury);
     }
@@ -224,18 +224,18 @@ contract TAVCalculator {
     }
 
     function calculateTAV() external view returns (uint256 _TAV) {
-        uint256 orfiTotalSupply = ORFI.totalSupply();
+        uint256 chrfTotalSupply = CHRF.totalSupply();
         uint256 totalReserve = 0;
         for (uint256 i = 0; i < assetManagers.length; i++) {
             if(!blacklistedAddress[address(assetManagers[i])]){
                 totalReserve += IAssetManager(assetManagers[i]).totalReserves();
             }
         }
-        _TAV = calculateTAVRatio(totalReserve, orfiTotalSupply);
+        _TAV = calculateTAVRatio(totalReserve, chrfTotalSupply);
     }
 
-    function calculateTAVRatio(uint256 totalReserve, uint256 totalORFISupply) internal pure returns(uint256) {
-        return (FixedPoint.fraction(totalReserve, totalORFISupply).decode112with18() / 1e9);
+    function calculateTAVRatio(uint256 totalReserve, uint256 totalCHRFSupply) internal pure returns(uint256) {
+        return (FixedPoint.fraction(totalReserve, totalCHRFSupply).decode112with18() / 1e9);
     }
 
     function addAssetManager(address assetManager_) external {

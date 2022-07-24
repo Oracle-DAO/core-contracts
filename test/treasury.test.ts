@@ -1,7 +1,7 @@
 import { ethers } from "hardhat";
+// eslint-disable-next-line node/no-missing-import
 import { constants } from "../scripts/constants";
 import { expect } from "chai";
-import { Contract } from "ethers";
 
 describe("Treasury Testing", function () {
   it("Deploy Treasury and Treasury Helper", async function () {
@@ -11,13 +11,13 @@ describe("Treasury Testing", function () {
     const mim = await MIM.deploy();
     await mim.deployed();
 
-    const ORFI = await ethers.getContractFactory("ORFI");
-    const orfi = await ORFI.deploy();
-    await orfi.deployed();
+    const CHRF = await ethers.getContractFactory("CHRF");
+    const chrf = await CHRF.deploy();
+    await chrf.deployed();
 
     const TreasuryHelper = await ethers.getContractFactory("TreasuryHelper");
     const treasuryHelper = await TreasuryHelper.deploy(
-      orfi.address,
+      chrf.address,
       mim.address,
       0
     );
@@ -33,7 +33,7 @@ describe("Treasury Testing", function () {
       "0x0000000000000000000000000000000000000000"
     );
 
-    // reserve spender address will go here. They will burn ORFI
+    // reserve spender address will go here. They will burn CHRF
     await treasuryHelper.queue("1", deployer.address);
 
     // reserve spender address will go here
@@ -55,25 +55,25 @@ describe("Treasury Testing", function () {
 
     const Treasury = await ethers.getContractFactory("Treasury");
     const treasury = await Treasury.deploy(
-      orfi.address,
+      chrf.address,
       treasuryHelper.address
     );
     await treasury.deployed();
 
-    // Only treasury can mint ORFI.
-    await orfi.setVault(treasury.address);
+    // Only treasury can mint CHRF.
+    await chrf.setVault(treasury.address);
 
     expect(await treasury.treasuryHelper()).to.equal(
       await treasuryHelper.address
     );
-    expect(await treasury.ORFI()).to.equal(orfi.address);
+    expect(await treasury.CHRF()).to.equal(chrf.address);
 
     // mint mim for msg.sender
     await mim.mint(deployer.address, "100000000000000000000");
 
     const TAVCalculator = await ethers.getContractFactory("TAVCalculator");
     const tavCalculator = await TAVCalculator.deploy(
-      orfi.address,
+      chrf.address,
       treasury.address
     );
     await tavCalculator.deployed();
@@ -81,8 +81,8 @@ describe("Treasury Testing", function () {
     // approve large number for treasury, so that it can move
     await mim.approve(treasury.address, constants.largeApproval);
 
-    // approve treasury address for a user so that treasury can burn orfi for user
-    await orfi.approve(treasury.address, constants.largeApproval);
+    // approve treasury address for a user so that treasury can burn chrf for user
+    await chrf.approve(treasury.address, constants.largeApproval);
 
     await treasury.setTAVCalculator(tavCalculator.address);
 
@@ -90,16 +90,16 @@ describe("Treasury Testing", function () {
       "100000000000000000000"
     );
 
-    // Deposit 10 MIM and mint 5 ORFI
+    // Deposit 10 MIM and mint 5 CHRF
     await treasury.deposit(
       "10000000", // reserve token amount to deposit
       mim.address,
-      "5000000000000000000" // amount of orfi to mint
+      "5000000000000000000" // amount of chrf to mint
     );
 
     expect(await treasury.totalReserves()).to.equal("10000000000000000000");
 
-    // assuming the ORFI price to be 1$, burn 2.5$ of ORFI and retrive 2.5$
+    // assuming the CHRF price to be 1$, burn 2.5$ of CHRF and retrive 2.5$
     // mim balance after this method for deployer is 92500000000000000000
     await treasury.withdraw("2500000", mim.address);
 

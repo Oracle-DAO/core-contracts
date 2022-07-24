@@ -69,6 +69,14 @@ const config: HardhatUserConfig = {
           ? [process.env.PRIVATE_KEY, process.env.TEAM_FEES_PRIVATE_KEY]
           : [],
     },
+    bttc_testnet: {
+      url: "https://pre-rpc.bt.io/",
+      accounts:
+        process.env.TEST_PTIVATE_KEY !== undefined &&
+        process.env.TEAM_FEES_PRIVATE_KEY !== undefined
+          ? [process.env.TEST_PTIVATE_KEY, process.env.TEAM_FEES_PRIVATE_KEY]
+          : [],
+    },
   },
   gasReporter: {
     enabled: process.env.REPORT_GAS !== undefined,

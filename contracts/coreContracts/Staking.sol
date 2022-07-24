@@ -92,8 +92,8 @@ contract Staking is Ownable {
   /* ========== EVENTS ========== */
 
   event WarmupSet(uint256 warmup);
-  event OrfiStaked(address indexed account, uint256 amount);
-  event OrfiUnstaked(address indexed account, uint256 amount);
+  event ChrfStaked(address indexed account, uint256 amount);
+  event ChrfUnstaked(address indexed account, uint256 amount);
 
   /* ========== DATA STRUCTURES ========== */
 
@@ -112,8 +112,8 @@ contract Staking is Ownable {
 
   /* ========== STATE VARIABLES ========== */
 
-  IERC20 public immutable ORFI;
-  IERC20 public immutable sORFI;
+  IERC20 public immutable CHRF;
+  IERC20 public immutable sCHRF;
   IRewardDistributor public rewardDistributor;
 
   mapping(address => Claim) public warmupInfo;
@@ -123,13 +123,13 @@ contract Staking is Ownable {
   /* ========== CONSTRUCTOR ========== */
 
   constructor(
-    address _orfi,
-    address _sorfi
+    address _chrf,
+    address _schrf
   ) {
-    require(_orfi != address(0), "Zero address: ORFI");
-    ORFI = IERC20(_orfi);
-    require(_sorfi != address(0), "Zero address: sORFI");
-    sORFI = IERC20(_sorfi);
+    require(_chrf != address(0), "Zero address: CHRF");
+    CHRF = IERC20(_chrf);
+    require(_schrf != address(0), "Zero address: sCHRF");
+    sCHRF = IERC20(_schrf);
   }
 
   function setRewardDistributor(address rewardDistributor_) external onlyOwner {
@@ -139,7 +139,7 @@ contract Staking is Ownable {
   /* ========== MUTATIVE FUNCTIONS ========== */
 
   /**
-   * @notice stake ORFI to enter warmup
+   * @notice stake CHRF to enter warmup
      * @param _to address
      * @param _amount uint
      * @return uint
@@ -148,11 +148,11 @@ contract Staking is Ownable {
     address _to,
     uint256 _amount
   ) external returns (uint256) {
-    ORFI.safeTransferFrom(msg.sender, address(this), _amount);
+    CHRF.safeTransferFrom(msg.sender, address(this), _amount);
     if (warmupPeriod == 0) {
       _send(_to, _amount);
       rewardDistributor.stake(_to, _amount);
-      emit OrfiStaked(_to, _amount);
+      emit ChrfStaked(_to, _amount);
       return _amount;
     } else {
         Claim memory info = warmupInfo[_to];
@@ -187,21 +187,21 @@ contract Staking is Ownable {
       delete warmupInfo[_to];
 
       amountInWarmup = amountInWarmup.sub(info.deposit);
-      emit OrfiStaked(_to, info.deposit);
+      emit ChrfStaked(_to, info.deposit);
       return _send(_to, info.deposit);
     }
     return 0;
   }
 
   /**
-   * @notice forfeit stake and retrieve ORFI
+   * @notice forfeit stake and retrieve CHRF
    * @return uint
   */
   function forfeit() external returns (uint256) {
     Claim memory info = warmupInfo[msg.sender];
     delete warmupInfo[msg.sender];
     amountInWarmup = amountInWarmup.sub(info.deposit);
-    ORFI.safeTransfer(msg.sender, info.deposit);
+    CHRF.safeTransfer(msg.sender, info.deposit);
     return info.deposit;
   }
 
@@ -222,18 +222,18 @@ contract Staking is Ownable {
     address _to,
     uint256 _amount
   ) external returns (uint256 amount_) {
-    sORFI.burn(msg.sender, _amount);
-    require(_amount <= ORFI.balanceOf(address(this)), "Insufficient ORFI balance in contract");
-    ORFI.safeTransfer(_to, _amount);
+    sCHRF.burn(msg.sender, _amount);
+    require(_amount <= CHRF.balanceOf(address(this)), "Insufficient CHRF balance in contract");
+    CHRF.safeTransfer(_to, _amount);
     rewardDistributor.unstake(_to, _amount);
-    emit OrfiUnstaked(_to, _amount);
+    emit ChrfUnstaked(_to, _amount);
     return _amount;
   }
 
   /* ========== INTERNAL FUNCTIONS ========== */
 
   /**
-   * @notice send staker their amount as sORFI
+   * @notice send staker their amount as sCHRF
      * @param _to address
      * @param _amount uint
      */
@@ -241,7 +241,7 @@ contract Staking is Ownable {
     address _to,
     uint256 _amount
   ) internal returns (uint256) {
-      sORFI.mint(_to, _amount); // send as sORFI (equal unit as ORFI)
+      sCHRF.mint(_to, _amount); // send as sCHRF (equal unit as CHRF)
       return _amount;
   }
 
@@ -255,10 +255,10 @@ contract Staking is Ownable {
   }
 
   /**
-   * @notice ORFI balance present in contract
+   * @notice CHRF balance present in contract
    */
-  function contractORFIBalance() external view returns (uint256) {
-    return ORFI.balanceOf(address(this));
+  function contractCHRFBalance() external view returns (uint256) {
+    return CHRF.balanceOf(address(this));
   }
 
   /* ========== MANAGERIAL FUNCTIONS ========== */

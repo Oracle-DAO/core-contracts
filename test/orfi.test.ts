@@ -3,8 +3,8 @@ import { constants } from "../scripts/constants";
 import { expect } from "chai";
 import { Contract } from "ethers";
 
-describe("ORFI Test", function () {
-  let orfi: Contract,
+describe("CHRF Test", function () {
+  let chrf: Contract,
     mim: Contract,
     deployer: any;
   before(async () => {
@@ -14,31 +14,31 @@ describe("ORFI Test", function () {
     mim = await MIM.deploy();
     await mim.deployed();
 
-    const ORFI = await ethers.getContractFactory("ORFI");
-    orfi = await ORFI.deploy();
-    await orfi.deployed();
+    const CHRF = await ethers.getContractFactory("CHRF");
+    chrf = await CHRF.deploy();
+    await chrf.deployed();
 
     // This will be the address of treasury
-    await orfi.setVault(deployer.address);
+    await chrf.setVault(deployer.address);
   });
 
   it("Should check vault address", async function () {
 
-    expect(await orfi.vault()).to.equal(deployer.address);
+    expect(await chrf.vault()).to.equal(deployer.address);
 
-    await orfi.approve(deployer.address, "1000000000000000000");
-    await orfi.mint(deployer.address, "1000000000000000000");
+    await chrf.approve(deployer.address, "1000000000000000000");
+    await chrf.mint(deployer.address, "1000000000000000000");
 
-    expect(await orfi.balanceOf(deployer.address)).to.equal(
+    expect(await chrf.balanceOf(deployer.address)).to.equal(
       "1000000000000000000"
     );
   });
 
-  it("Should burn minted ORFI", async function () {
+  it("Should burn minted CHRF", async function () {
 
-    await orfi.burn("1000000000000000000");
+    await chrf.burn("1000000000000000000");
 
-    expect(await orfi.balanceOf(deployer.address)).to.equal(
+    expect(await chrf.balanceOf(deployer.address)).to.equal(
       "0"
     );
   });

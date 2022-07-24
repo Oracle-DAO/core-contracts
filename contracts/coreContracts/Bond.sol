@@ -17,7 +17,7 @@ interface ITreasury {
     function deposit(
         uint256 _amount,
         address _token,
-        uint256 _orfiMinted
+        uint256 _chrfMinted
     ) external;
 
     function valueOfToken(address _token, uint256 _amount, bool isReserveToken, bool isLiquidToken)
@@ -334,12 +334,12 @@ contract Bond is Ownable {
         uint256 bondingRewardFee; // as % of bond payout, in hundreths. ( 500 = 5% = 0.05 for every 1 paid)
         uint256 maxDebt; // 9 decimal debt ratio, max % total supply created as debt
         uint32 vestingTerm; // in seconds
-        uint256 minimumPayout; // minimum ORFI that needs to be bonded for
+        uint256 minimumPayout; // minimum CHRF that needs to be bonded for
     }
 
     // Info for bond holder
     struct BondInfo {
-        uint256 payout; // ORFI remaining to be paid
+        uint256 payout; // CHRF remaining to be paid
         uint256 pricePaid; // In DAI, for front end viewing
         uint32 lastTime; // Last interaction
         uint32 vesting; // Seconds left to vest
@@ -367,9 +367,9 @@ contract Bond is Ownable {
 
     /* ======== STATE VARIABLES ======== */
 
-    IERC20 public immutable ORFI; // token given as payment for bond
+    IERC20 public immutable CHRF; // token given as payment for bond
     IERC20 public principle; // token used to create bond
-    ITreasury public immutable treasury; // mints ORFI when receives principle
+    ITreasury public immutable treasury; // mints CHRF when receives principle
     address public immutable DAO; // receives profit share from bond
 
     IStaking public staking; // to auto-stake payout
@@ -388,13 +388,13 @@ contract Bond is Ownable {
     /* ======== INITIALIZATION ======== */
 
     constructor(
-        address _ORFI,
+        address _CHRF,
         address _principle,
         address _treasury,
         address _DAO
     ) {
-        require(_ORFI != address(0));
-        ORFI = IERC20(_ORFI);
+        require(_CHRF != address(0));
+        CHRF = IERC20(_CHRF);
         require(_principle != address(0));
         principle = IERC20(_principle);
         require(_treasury != address(0));
@@ -504,7 +504,7 @@ contract Bond is Ownable {
         require(_staking != address(0), 'IA');
         staking = IStaking(_staking);
         emit LogSetStaking(_staking);
-        ORFI.approve(address(staking), 1e45);
+        CHRF.approve(address(staking), 1e45);
     }
 
     function setFloorPriceValue(uint256 _value) external onlyOwner {
@@ -543,12 +543,12 @@ contract Bond is Ownable {
         uint256 payout = payoutFor(amount); // payout to bonder is computed in 1e18
 
         require(totalDebt.add(amount) <= terms.maxDebt, 'Max capacity reached');
-        require(payout >= minPayout(), 'Bond too small'); // must be > 0.01 ORFI ( underflow protection )
+        require(payout >= minPayout(), 'Bond too small'); // must be > 0.01 CHRF ( underflow protection )
         require(payout <= maxPayout(), 'Bond too large'); // size protection because there is no slippage
 
         // profits are calculated
         uint256 fee = payout.mul(terms.fee) / 100000;
-        uint256 orfiToMint = payout.add(fee);
+        uint256 chrfToMint = payout.add(fee);
 
         // total debt is increased
         totalDebt = totalDebt.add(_amount);
@@ -562,11 +562,11 @@ contract Bond is Ownable {
         });
 
         principle.safeTransferFrom(msg.sender, address(this), _amount);
-        treasury.deposit(_amount, address(principle), orfiToMint);
+        treasury.deposit(_amount, address(principle), chrfToMint);
 
         if (fee != 0) {
             // fee is transferred to dao
-            ORFI.safeTransfer(DAO, fee);
+            CHRF.safeTransfer(DAO, fee);
         }
 
         // indexed events are emitted
@@ -626,7 +626,7 @@ contract Bond is Ownable {
     ) internal {
         if (!_stake) {
             // if user does not want to stake
-            ORFI.safeTransfer(_recipient, _amount); // send payout
+            CHRF.safeTransfer(_recipient, _amount); // send payout
         } else {
             staking.stake(_recipient, _amount);
         }
@@ -703,7 +703,7 @@ contract Bond is Ownable {
    *  @return uint
    */
     function maxPayout() public view returns (uint256) {
-        return (ORFI.totalSupply().mul(terms.maxPayout) / 100000);
+        return (CHRF.totalSupply().mul(terms.maxPayout) / 100000);
     }
 
     function minPayout() internal view returns (uint256) {
@@ -720,11 +720,11 @@ contract Bond is Ownable {
     }
 
     /**
-    *  @notice calculate current ratio of debt to ORFI supply in 1e9 equivalent
+    *  @notice calculate current ratio of debt to CHRF supply in 1e9 equivalent
     *  @return debtRatio_ uint
     */
     function debtRatio() public view returns (uint256 debtRatio_) {
-        uint256 supply = ORFI.totalSupply();
+        uint256 supply = CHRF.totalSupply();
         debtRatio_ = FixedPoint.fraction(currentDebt().mul(1e9), supply).decode112with18() / 1e18;
     }
 
@@ -770,7 +770,7 @@ contract Bond is Ownable {
     }
 
     /**
-   *  @notice calculate amount of ORFI available for claim by depositor
+   *  @notice calculate amount of CHRF available for claim by depositor
    *  @param _depositor address
    *  @return pendingPayout_ uint
    */
@@ -796,11 +796,11 @@ contract Bond is Ownable {
     /* ======= AUXILLIARY ======= */
 
     /**
-     *  @notice allow anyone to send lost tokens (excluding principle or ORFI) to the DAO
+     *  @notice allow anyone to send lost tokens (excluding principle or CHRF) to the DAO
    *  @return bool
    */
     function recoverLostToken(address _token) external returns (bool) {
-        require(_token != address(ORFI), 'NAT');
+        require(_token != address(CHRF), 'NAT');
         require(_token != address(principle), 'NAP');
         uint256 balance = IERC20(_token).balanceOf(address(this));
         IERC20(_token).safeTransfer(DAO, balance);

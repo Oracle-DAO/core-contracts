@@ -1,5 +1,5 @@
 export class constants {
-  public static floorPrice = "250000000";
+  public static floorPrice = "2500000000";
   public static initialIndex = "7675210820";
   public static firstEpochBlock = "8961000"; // Should be the deployement time in uint32(block.timestamp)
   public static firstEpochNumber = "1"; // for every rebase done, this increase by 1. This can be used as a vesting strategy
@@ -13,16 +13,16 @@ export class constants {
   public static bondVestingLength = "259200"; // 3 days times in second (3*24*3600)
   public static minBondPrice = "500000";
   public static maxBondPayout = "10000"; // max payout 10 % of total supply
-  public static minBondPayout = "10000000000000000"; // 0.01 ORFI
+  public static minBondPayout = "10000000000000000"; // 0.01 CHRF
   public static bondFee = "10000"; // DAO fees 10 %
   public static bondRewardFee = "10000"; // bonding reward fee %
   public static maxBondDebt = "1000000000000000000000000";
   public static adjustmentIncrement = "3";
   public static blockNeededToWait = "0";
-  public static lpAddress = "0x2E8F5530DAf29079c63Ae28C2cD5A3733af942BA";
+  public static lpAddress = "0x514e6c4d5a1e6cbee609ca8d8d6cb75537194289";
   public static principalToken = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F";
   public static nttContractAddress =
     "0x57e54A873382F9758f1F6dE9790f50c1F50c67C9";
 
-  public static usdtAddress = "0xdC19A122e268128B5eE20366299fc7b5b199C8e3";
+  public static usdtAddress = "0x66A305011c74a94121195Eb0eEaa678637c1F890";
 }

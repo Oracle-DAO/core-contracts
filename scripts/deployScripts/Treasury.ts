@@ -3,11 +3,11 @@ import { ethers } from "hardhat";
 import { readContractAddress, saveFrontendFiles } from "../helpers";
 
 async function main() {
-  const orfiAddress = readContractAddress("/ORFI.json");
+  const chrfAddress = readContractAddress("/CHRF.json");
   const treasuryHelperAddress = readContractAddress("/TreasuryHelper.json");
 
   const Treasury = await ethers.getContractFactory("Treasury");
-  const treasury = await Treasury.deploy(orfiAddress, treasuryHelperAddress);
+  const treasury = await Treasury.deploy(chrfAddress, treasuryHelperAddress);
   await treasury.deployed();
 
   console.log("Token address of treasury:", treasury.address);

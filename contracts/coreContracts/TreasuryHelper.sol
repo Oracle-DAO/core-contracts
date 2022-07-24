@@ -90,7 +90,7 @@ interface ITreasury {
     function deposit(
         uint256 _amount,
         address _token,
-        uint256 _orfiMinted
+        uint256 _chrfMinted
     ) external;
 
     function valueOfToken(address _token, uint256 _amount, bool isReserveToken, bool isLiquidToken)
@@ -105,7 +105,7 @@ contract TreasuryHelper is Ownable {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
-    address public immutable ORFI;
+    address public immutable CHRF;
     ITreasury public treasury;
 
     event ChangeQueued(MANAGING indexed managing, address queued);
@@ -127,7 +127,7 @@ contract TreasuryHelper is Ownable {
         LIQUIDITYMANAGER,
         DEBTOR,
         REWARDMANAGER,
-        SORFI
+        SCHRF
     }
 
     uint256 public immutable blocksNeededForQueue;
@@ -170,16 +170,16 @@ contract TreasuryHelper is Ownable {
     mapping(address => bool) public isRewardManager;
     mapping(address => uint256) public rewardManagerQueue; // Delays changes to mapping.
 
-    address public sORFI;
-    uint256 public sORFIQueue;
+    address public sCHRF;
+    uint256 public sCHRFQueue;
 
     constructor(
-        address _ORFI,
+        address _CHRF,
         address _MIM,
         uint256 _blocksNeededForQueue
     ) {
-        require(_ORFI != address(0));
-        ORFI = _ORFI;
+        require(_CHRF != address(0));
+        CHRF = _CHRF;
 
         require(_MIM != address(0));
         reserveTokens.push(_MIM);
@@ -238,9 +238,9 @@ contract TreasuryHelper is Ownable {
         } else if (_managing == MANAGING.REWARDMANAGER) {
             // 8
             rewardManagerQueue[_address] = block.number.add(blocksNeededForQueue);
-        } else if (_managing == MANAGING.SORFI) {
+        } else if (_managing == MANAGING.SCHRF) {
             // 9
-            sORFIQueue = block.number.add(blocksNeededForQueue);
+            sCHRFQueue = block.number.add(blocksNeededForQueue);
         } else return false;
 
         emit ChangeQueued(_managing, _address);
@@ -356,10 +356,10 @@ contract TreasuryHelper is Ownable {
             }
             result = !isRewardManager[_address];
             isRewardManager[_address] = result;
-        } else if (_managing == MANAGING.SORFI) {
+        } else if (_managing == MANAGING.SCHRF) {
             // 9
-            sORFIQueue = 0;
-            sORFI = _address;
+            sCHRFQueue = 0;
+            sCHRF = _address;
             result = true;
         } else return false;
 
@@ -415,7 +415,7 @@ contract TreasuryHelper is Ownable {
     function valueOfToken(address _token, uint256 _amount) external view returns (uint256 value_) {
         if (isReserveToken[_token]) {
             // convert amount to match OHM decimals
-            value_ = _amount.mul(10**IERC20(ORFI).decimals()).div(10**IERC20(_token).decimals());
+            value_ = _amount.mul(10**IERC20(CHRF).decimals()).div(10**IERC20(_token).decimals());
         } else if (isLiquidityToken[_token]) {
             value_ = IBondCalculator(bondCalculator[_token]).valuation(_token, _amount);
         }

@@ -3,9 +3,9 @@ import { ethers } from "hardhat";
 import { readContractAddress } from "./helpers";
 import {constants} from "./constants";
 
-const sORFIAdd = readContractAddress("/StakedORFI.json");
+const sCHRFAdd = readContractAddress("/StakedCHRF.json");
 const mimAdd = readContractAddress("/MIM.json");
-const orfiAdd = readContractAddress("/ORFI.json");
+const chrfAdd = readContractAddress("/CHRF.json");
 const bondAdd = readContractAddress("/Bond.json");
 const tavCalculatorAdd = readContractAddress("/TAVCalculator.json");
 const stakingAdd = readContractAddress("/Staking.json");
@@ -20,11 +20,11 @@ async function main() {
   const MIMBond = await ethers.getContractFactory("Bond");
   const mimBond = await MIMBond.attach(bondAdd);
 
-  const ORFI = await ethers.getContractFactory("ORFI");
-  const orfi = await ORFI.attach(orfiAdd);
+  const CHRF = await ethers.getContractFactory("CHRF");
+  const chrf = await CHRF.attach(chrfAdd);
 
-  const StakedORFI = await ethers.getContractFactory("StakedORFI");
-  const sORFI = await StakedORFI.attach(sORFIAdd);
+  const StakedCHRF = await ethers.getContractFactory("StakedCHRF");
+  const sCHRF = await StakedCHRF.attach(sCHRFAdd);
 
   const Treasury = await ethers.getContractFactory("Treasury");
   const treasury = await Treasury.attach(treasuryAdd);
@@ -55,13 +55,13 @@ async function main() {
       LpAssetAdd
   );
 
-  console.log(await sORFI.stakingContract());
+  console.log(await sCHRF.stakingContract());
 
   // console.log(await mimBond.bondPrice());
   //
   // console.log(await mimBond.floorPriceValue());
 
-  // console.log(await rewardDistributor.getTotalStakedOrfiOfUserForACycle(deployer.address, 1));
+  // console.log(await rewardDistributor.getTotalStakedChrfOfUserForACycle(deployer.address, 1));
 
   // console.log("2:", await rewardDistributor.rewardsForACycle("0xe10293396F0Ec3D4A0ED7e3042d7C3174955E009", 3));
   // console.log("3:", await rewardDistributor.rewardsForACycle("0xe10293396F0Ec3D4A0ED7e3042d7C3174955E009", 5));
@@ -100,11 +100,11 @@ async function main() {
   //
   // await staking.stake(deployer.address, "1000000000000000000000");
   //
-  // console.log(await rewardDistributor.getTotalStakedOrfiOfUserForACycle(deployer.address, 1));
+  // console.log(await rewardDistributor.getTotalStakedChrfOfUserForACycle(deployer.address, 1));
   //
   // await staking.unstake(deployer.address, "1000000000000000000000");
   //
-  // console.log(await rewardDistributor.getTotalStakedOrfiOfUserForACycle(deployer.address, 1));
+  // console.log(await rewardDistributor.getTotalStakedChrfOfUserForACycle(deployer.address, 1));
 
   // await mimBond.setFloorPriceValue(constants.floorPrice);
   //
@@ -114,13 +114,13 @@ async function main() {
 
   // console.log("tav : ", await tavCalculator.calculateTAV());
   // //
-  // console.log("tav : ", await orfi.totalSupply());
+  // console.log("tav : ", await chrf.totalSupply());
   // //
   // console.log("total reserves of LP", await LpAsset.totalReserves());
   //
   // console.log("total reserves of Treasury", await treasury.totalReserves());
   //
-  // console.log("total ORFI supply",await orfi.totalSupply());
+  // console.log("total CHRF supply",await chrf.totalSupply());
   //
   // const terms = await mimBond.terms();
   //
@@ -144,9 +144,9 @@ async function main() {
 
 
 
-  // console.log(await rewardDistributor.getTotalStakedOrfiOfUserForACycle(deployer.address, 1));
+  // console.log(await rewardDistributor.getTotalStakedChrfOfUserForACycle(deployer.address, 1));
 
-  // await orfi.setBaseSellTax(15);
+  // await chrf.setBaseSellTax(15);
 }
 
 main().catch((error) => {

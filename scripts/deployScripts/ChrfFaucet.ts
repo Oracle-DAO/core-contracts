@@ -11,16 +11,16 @@ async function main() {
     await deployer.address
   );
 
-  const orfiAddress = readContractAddress("/ORFI.json");
+  const chrfAddress = readContractAddress("/CHRF.json");
 
-  const OrfiFaucet = await ethers.getContractFactory("OrfiFaucet");
-  const orfiFaucet = await OrfiFaucet.deploy(orfiAddress);
-  await orfiFaucet.deployed();
+  const ChrfFaucet = await ethers.getContractFactory("ChrfFaucet");
+  const chrfFaucet = await ChrfFaucet.deploy(chrfAddress);
+  await chrfFaucet.deployed();
 
-  console.log("Token address of orfiFaucet:", orfiFaucet.address);
+  console.log("Token address of chrfFaucet:", chrfFaucet.address);
 
   // We also save the contract's artifacts and address in the frontend directory
-  saveFrontendFiles(orfiFaucet, "OrfiFaucet");
+  saveFrontendFiles(chrfFaucet, "ChrfFaucet");
 }
 
 main().catch((error) => {

@@ -3,14 +3,14 @@ import { ethers} from "hardhat";
 import { saveFrontendFiles } from "../helpers";
 
 async function main() {
-  const StakedORFI = await ethers.getContractFactory("StakedORFI");
-  const sORFI = await StakedORFI.deploy();
-  await sORFI.deployed();
+  const StakedCHRF = await ethers.getContractFactory("StakedCHRF");
+  const sCHRF = await StakedCHRF.deploy();
+  await sCHRF.deployed();
 
-  console.log("Token address of sORFI:", sORFI.address);
+  console.log("Token address of sCHRF:", sCHRF.address);
 
   // We also save the contract's artifacts and address in the frontend directory
-  saveFrontendFiles(sORFI, "StakedORFI");
+  saveFrontendFiles(sCHRF, "StakedCHRF");
 }
 
 main().catch((error) => {

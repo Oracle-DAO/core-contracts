@@ -34,8 +34,8 @@ contract MockStaking is Ownable {
 
   /* ========== STATE VARIABLES ========== */
 
-  IERC20 public immutable ORFI;
-  IERC20 public immutable sORFI;
+  IERC20 public immutable CHRF;
+  IERC20 public immutable sCHRF;
   IRewardDistributor public rewardDistributor;
 
   mapping(address => Claim) public warmupInfo;
@@ -45,13 +45,13 @@ contract MockStaking is Ownable {
   /* ========== CONSTRUCTOR ========== */
 
   constructor(
-    address _orfi,
-    address _sorfi
+    address _chrf,
+    address _schrf
   ) {
-    require(_orfi != address(0), "Zero address: ORFI");
-    ORFI = IERC20(_orfi);
-    require(_sorfi != address(0), "Zero address: sORFI");
-    sORFI = IERC20(_sorfi);
+    require(_chrf != address(0), "Zero address: CHRF");
+    CHRF = IERC20(_chrf);
+    require(_schrf != address(0), "Zero address: sCHRF");
+    sCHRF = IERC20(_schrf);
   }
 
   function setRewardDistributor(address rewardDistributor_) external {
@@ -61,7 +61,7 @@ contract MockStaking is Ownable {
   /* ========== MUTATIVE FUNCTIONS ========== */
 
   /**
-   * @notice stake ORFI to enter warmup
+   * @notice stake CHRF to enter warmup
      * @param _to address
      * @param _amount uint
      * @return uint
@@ -70,7 +70,7 @@ contract MockStaking is Ownable {
     address _to,
     uint256 _amount
   ) external returns (uint256) {
-    ORFI.safeTransferFrom(msg.sender, address(this), _amount);
+    CHRF.safeTransferFrom(msg.sender, address(this), _amount);
     if (warmupPeriod == 0) {
       _send(_to, _amount);
       rewardDistributor.stake(_to, _amount);
@@ -114,14 +114,14 @@ contract MockStaking is Ownable {
   }
 
   /**
-   * @notice forfeit stake and retrieve ORFI
+   * @notice forfeit stake and retrieve CHRF
    * @return uint
   */
   function forfeit() external returns (uint256) {
     Claim memory info = warmupInfo[msg.sender];
     delete warmupInfo[msg.sender];
     amountInWarmup = amountInWarmup.sub(info.deposit);
-    ORFI.safeTransfer(msg.sender, info.deposit);
+    CHRF.safeTransfer(msg.sender, info.deposit);
     return info.deposit;
   }
 
@@ -142,17 +142,17 @@ contract MockStaking is Ownable {
     address _to,
     uint256 _amount
   ) external returns (uint256 amount_) {
-    sORFI.burn(msg.sender, _amount);
-    require(_amount <= ORFI.balanceOf(address(this)), "Insufficient ORFI balance in contract");
+    sCHRF.burn(msg.sender, _amount);
+    require(_amount <= CHRF.balanceOf(address(this)), "Insufficient CHRF balance in contract");
     rewardDistributor.unstake(_to, _amount);
-    ORFI.safeTransfer(_to, _amount);
+    CHRF.safeTransfer(_to, _amount);
     return _amount;
   }
 
   /* ========== INTERNAL FUNCTIONS ========== */
 
   /**
-   * @notice send staker their amount as sORFI
+   * @notice send staker their amount as sCHRF
      * @param _to address
      * @param _amount uint
      */
@@ -160,7 +160,7 @@ contract MockStaking is Ownable {
     address _to,
     uint256 _amount
   ) internal returns (uint256) {
-      sORFI.mint(_to, _amount); // send as sORFI (equal unit as ORFI)
+      sCHRF.mint(_to, _amount); // send as sCHRF (equal unit as CHRF)
       return _amount;
   }
 
@@ -174,10 +174,10 @@ contract MockStaking is Ownable {
   }
 
   /**
-   * @notice ORFI balance present in contract
+   * @notice CHRF balance present in contract
    */
-  function contractORFIBalance() public view returns (uint256) {
-    return ORFI.balanceOf(address(this));
+  function contractCHRFBalance() public view returns (uint256) {
+    return CHRF.balanceOf(address(this));
   }
 
   /* ========== MANAGERIAL FUNCTIONS ========== */

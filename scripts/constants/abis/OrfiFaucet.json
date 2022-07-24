@@ -1,13 +1,13 @@
 {
   "_format": "hh-sol-artifact-1",
-  "contractName": "OrfiFaucet",
-  "sourceName": "contracts/OrfiFaucet.sol",
+  "contractName": "ChrfFaucet",
+  "sourceName": "contracts/ChrfFaucet.sol",
   "abi": [
     {
       "inputs": [
         {
           "internalType": "address",
-          "name": "orfiAddress",
+          "name": "chrfAddress",
           "type": "address"
         }
       ],
@@ -29,7 +29,7 @@
     },
     {
       "inputs": [],
-      "name": "orfiContract",
+      "name": "chrfContract",
       "outputs": [
         {
           "internalType": "contract IERC20",

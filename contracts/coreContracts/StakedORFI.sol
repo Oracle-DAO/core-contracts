@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-contract StakedORFI is Context, ERC20{
+contract StakedCHRF is Context, ERC20{
     using SafeMath for uint256;
 
     address public stakingContract;
@@ -19,7 +19,7 @@ contract StakedORFI is Context, ERC20{
         _;
     }
 
-    constructor() ERC20('Staked Oracle', 'sORFI') {
+    constructor() ERC20('Staked Oracle', 'sCHRF') {
         initializer = msg.sender;
     }
 
@@ -43,7 +43,7 @@ contract StakedORFI is Context, ERC20{
     }
 
     /**
-   *  @notice Only stakingContract can transfer sORFI
+   *  @notice Only stakingContract can transfer sCHRF
    *  @param to address
    *  @param amount uint256
    */
@@ -54,7 +54,7 @@ contract StakedORFI is Context, ERC20{
     }
 
     /**
-   *  @notice Only stakingContract can transfer sORFI
+   *  @notice Only stakingContract can transfer sCHRF
    *  @param from address
    *  @param to address
    *  @param amount uint256

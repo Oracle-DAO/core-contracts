@@ -1,7 +1,7 @@
 {
   "_format": "hh-sol-artifact-1",
-  "contractName": "ORFI",
-  "sourceName": "contracts/coreContracts/ORFI.sol",
+  "contractName": "CHRF",
+  "sourceName": "contracts/coreContracts/CHRF.sol",
   "abi": [
     {
       "inputs": [],

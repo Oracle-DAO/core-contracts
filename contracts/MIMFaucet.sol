@@ -15,8 +15,8 @@ contract MIMFaucet {
 
     function faucet(address to_) external {
         require(to_ != address(0));
-        require(_userMapping[to_] <= (1e18), "User has MIM");
-        require(mimContract.balanceOf(address(this)) >= 1e20, "Insufficient MIM balance in faucet contract");
-        mimContract.transfer(to_, 1e19);
+        require(_userMapping[to_] <= (1e7), "User has faucet tokens");
+        require(mimContract.balanceOf(address(this)) >= 1e8, "Insufficient tokens balance in faucet contract");
+        mimContract.transfer(to_, 1e8);
     }
 }

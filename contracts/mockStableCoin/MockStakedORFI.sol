@@ -6,11 +6,11 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 
-contract MockStakedORFI is Ownable, ERC20 {
+contract MockStakedCHRF is Ownable, ERC20 {
 
     using SafeMath for uint256;
 
-    constructor() ERC20('Staked Oracle', 'sORFI') {}
+    constructor() ERC20('Staked Oracle', 'sCHRF') {}
 
     function mint(address account, uint256 amount) external {
         _mint(account, amount);

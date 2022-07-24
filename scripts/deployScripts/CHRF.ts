@@ -7,14 +7,14 @@ import { saveFrontendFiles } from "../helpers";
 async function main() {
   const [deployer] = await ethers.getSigners();
 
-  const ORFI = await ethers.getContractFactory("ORFI");
-  const orfi = await ORFI.deploy();
-  await orfi.deployed();
+  const CHRF = await ethers.getContractFactory("CHRF");
+  const chrf = await CHRF.deploy();
+  await chrf.deployed();
 
-  console.log("Token address of orfi:", orfi.address);
+  console.log("Token address of chrf:", chrf.address);
 
   // We also save the contract's artifacts and address in the frontend directory
-  saveFrontendFiles(orfi, "ORFI");
+  saveFrontendFiles(chrf, "CHRF");
 }
 
 main().catch((error) => {

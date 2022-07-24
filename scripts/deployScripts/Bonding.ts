@@ -8,11 +8,11 @@ async function main() {
 
   const treasuryAddress = readContractAddress("/Treasury.json");
   const mimAddress = readContractAddress("/MIM.json");
-  const orfiAddress = readContractAddress("/ORFI.json");
+  const chrfAddress = readContractAddress("/CHRF.json");
 
   const Bond = await ethers.getContractFactory("Bond");
   const bond = await Bond.deploy(
-    orfiAddress,
+    chrfAddress,
     constants.usdtAddress,
     treasuryAddress,
     DevFee.address

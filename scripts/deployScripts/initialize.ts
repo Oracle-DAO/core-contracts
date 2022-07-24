@@ -3,9 +3,9 @@ import { ethers } from "hardhat";
 import { readContractAddress } from "../helpers";
 import { constants } from "../constants";
 
-const sORFIAdd = readContractAddress("/StakedORFI.json");
+const sCHRFAdd = readContractAddress("/StakedCHRF.json");
 const mimAdd = readContractAddress("/MIM.json");
-const orfiAdd = readContractAddress("/ORFI.json");
+const chrfAdd = readContractAddress("/CHRF.json");
 const bondAdd = readContractAddress("/Bond.json");
 const tavCalculatorAdd = readContractAddress("/TAVCalculator.json");
 const stakingAdd = readContractAddress("/Staking.json");
@@ -18,11 +18,11 @@ async function main() {
   const MIMBond = await ethers.getContractFactory("Bond");
   const mimBond = await MIMBond.attach(bondAdd);
 
-  const ORFI = await ethers.getContractFactory("ORFI");
-  const orfi = await ORFI.attach(orfiAdd);
+  const CHRF = await ethers.getContractFactory("CHRF");
+  const chrf = await CHRF.attach(chrfAdd);
 
-  const StakedORFI = await ethers.getContractFactory("StakedORFI");
-  const sORFI = await StakedORFI.attach(sORFIAdd);
+  const StakedCHRF = await ethers.getContractFactory("StakedCHRF");
+  const sCHRF = await StakedCHRF.attach(sCHRFAdd);
 
   const Treasury = await ethers.getContractFactory("Treasury");
   const treasury = await Treasury.attach(treasuryAdd);
@@ -58,10 +58,10 @@ async function main() {
 
   // await staking.setRewardDistributor(rewardDistributor.address);
 
-  // TODO: mint ORFI and transfer it to NTT contract
-  // await orfi.setVault(treasury.address);
+  // TODO: mint CHRF and transfer it to NTT contract
+  // await chrf.setVault(treasury.address);
 
-  // await sORFI.initialize(staking.address);
+  // await sCHRF.initialize(staking.address);
 
   // // bond depository address will go here
   // await treasuryHelper.queue("0", mimBond.address);
@@ -75,7 +75,7 @@ async function main() {
   // // temporary deployer address for testing
   // await treasuryHelper.toggle("0", deployer.address, constants.zeroAddress);
   //
-  // // reserve spender address will go here. They will burn ORFI. Only for testing
+  // // reserve spender address will go here. They will burn CHRF. Only for testing
   // await treasuryHelper.queue("1", deployer.address);
   //
   // // reserve spender address will go here
@@ -99,19 +99,19 @@ async function main() {
   // // approve large number for treasury, so that it can transfer token as spender
   // await mim.approve(mimBond.address, constants.largeApproval);
 
-  // approve treasury address for a user so that treasury can burn orfi for user
-  // await orfi.approve(treasury.address, constants.largeApproval);
+  // approve treasury address for a user so that treasury can burn chrf for user
+  // await chrf.approve(treasury.address, constants.largeApproval);
 
   // await treasury.setTAVCalculator(tavCalculator.address);
 
   // mint mim for msg.sender. only for testing
   // await mim.mint(deployer.address, "10000000000000000000000000");
 
-  // // Deposit 5,000,000 MIM and mint 5,000,000 ORFI
+  // // Deposit 5,000,000 MIM and mint 5,000,000 CHRF
   // await treasury.deposit(
   //   "5000000000000000000000000", // reserve token amount to deposit
   //   mim.address,
-  //   "5000000000000000000000000" // amount of orfi to mint
+  //   "5000000000000000000000000" // amount of chrf to mint
   // );
 
   // await rewardDistributor.setTreasuryAddress(treasury.address);
@@ -119,15 +119,15 @@ async function main() {
   // await rewardDistributor.setStableCoinAddress(mim.address);
 
   console.log("contracts are attached to their ABIs");
-  console.log("ORFI: " + orfiAdd);
+  console.log("CHRF: " + chrfAdd);
   console.log("MIM Token: " + constants.usdtAddress);
   console.log("Treasury: " + treasuryAdd);
   console.log("TreasuryHelper: " + TreasuryHelperAdd);
   console.log("TAV Calculator: " + tavCalculatorAdd);
   console.log("Staking: " + stakingAdd);
-  console.log("sORFI: " + sORFIAdd);
+  console.log("sCHRF: " + sCHRFAdd);
   console.log("RewardDistributor: " + RewardDistributorAdd);
-  console.log("MIM-ORFI Bond: " + mimBond.address);
+  console.log("MIM-CHRF Bond: " + mimBond.address);
 }
 
 main().catch((error) => {

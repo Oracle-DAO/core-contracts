@@ -8,7 +8,9 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 contract MIM is Ownable, ERC20{
     using SafeMath for uint256;
 
-    constructor() ERC20('Mock.USDT', 'm.USDT') {}
+    constructor() ERC20('Mock.USDT', 'm.USDT') {
+        _mint(msg.sender, 1e12);
+    }
 
     function mint(address account, uint256 amount) external onlyOwner {
         _mint(account, amount);

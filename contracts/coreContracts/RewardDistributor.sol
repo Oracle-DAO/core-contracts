@@ -9,7 +9,7 @@ interface ITreasury {
     function deposit(
         uint256 _amount,
         address _token,
-        uint256 _orfiMinted
+        uint256 _chrfMinted
     ) external;
 
     function valueOfToken(address _token, uint256 _amount, bool isReserveToken, bool isLiquidToken)
@@ -271,7 +271,7 @@ library FullMath {
 
 contract RewardDistributor is Ownable {
 
-    event RewardCycleCompleted(uint256 allocatedRewards, uint256 totalStakedOrfi, uint8 rewardCycle);
+    event RewardCycleCompleted(uint256 allocatedRewards, uint256 totalStakedChrf, uint8 rewardCycle);
     event StakeBalanceUpdated(address indexed account, uint256 amount, uint256 averageTime);
     event UnstakeBalanceUpdated(address indexed account, uint256 amount, uint256 averageTime);
     event RedeemedRewards(address indexed account, uint256 amount, uint256 rewardCycle);
@@ -284,12 +284,12 @@ contract RewardDistributor is Ownable {
     struct RewardCycle {
         uint32 startTimestamp;
         uint32 endTimestamp;
-        uint256 totalStakedOrfiAmount;
+        uint256 totalStakedChrfAmount;
         uint256 totalAllocatedRewards;
     }
 
     struct UserStakeInfo {
-        uint256 stakedOrfiAmount;
+        uint256 stakedChrfAmount;
         uint32 averageInvestedTime;
         uint8 rewardCycle;
         bool redeemed;
@@ -302,7 +302,7 @@ contract RewardDistributor is Ownable {
     mapping(address => uint8) public _userActivityMapping;
 
     address private _stakingContract;
-    address private _stakedOrfiAddress;
+    address private _stakedChrfAddress;
     address private _stableCoinAddress;
     address private _treasury;
 
@@ -313,14 +313,14 @@ contract RewardDistributor is Ownable {
         _;
     }
 
-    constructor(address stakingContract_, address stakedOrfiAddress_) {
+    constructor(address stakingContract_, address stakedChrfAddress_) {
         require(stakingContract_ != address(0));
-        require(stakedOrfiAddress_ != address(0));
+        require(stakedChrfAddress_ != address(0));
         currentRewardCycle = 1;
         _totalRewardsAllocated = 0;
         _rewardCycleMapping[currentRewardCycle].startTimestamp = uint32(block.timestamp);
         _stakingContract = stakingContract_;
-        _stakedOrfiAddress = stakedOrfiAddress_;
+        _stakedChrfAddress = stakedChrfAddress_;
     }
 
     function setStableCoinAddress(address stableCoinAddress_) external onlyOwner {
@@ -339,20 +339,20 @@ contract RewardDistributor is Ownable {
         require(rewardCycle.startTimestamp < uint256(block.timestamp), "The cycle endTime should be GT startime");
         rewardCycle.endTimestamp = uint32(block.timestamp);
         rewardCycle.totalAllocatedRewards = rewardAmount;
-        rewardCycle.totalStakedOrfiAmount = IERC20(_stakedOrfiAddress).totalSupply();
+        rewardCycle.totalStakedChrfAmount = IERC20(_stakedChrfAddress).totalSupply();
         _rewardCycleMapping[currentRewardCycle] = rewardCycle;
-        emit RewardCycleCompleted(rewardAmount, rewardCycle.totalStakedOrfiAmount, currentRewardCycle);
+        emit RewardCycleCompleted(rewardAmount, rewardCycle.totalStakedChrfAmount, currentRewardCycle);
         currentRewardCycle++;
         _totalRewardsAllocated += rewardAmount;
         _rewardCycleMapping[currentRewardCycle].startTimestamp = uint32(block.timestamp);
     }
 
     function stake(address to_, uint256 amount) external onlyStakingContract {
-        updateStakeOrfiBalance(to_, amount, true);
+        updateStakeChrfBalance(to_, amount, true);
     }
 
     function unstake(address to_, uint256 amount) external onlyStakingContract {
-        updateStakeOrfiBalance(to_, amount, false);
+        updateStakeChrfBalance(to_, amount, false);
     }
 
     function redeemTotalRewardsForUser(address account_) external {
@@ -392,12 +392,12 @@ contract RewardDistributor is Ownable {
         RewardCycle memory rewardCycle = _rewardCycleMapping[rewardCycle_];
         uint32 cycleLength = rewardCycle.endTimestamp.sub32(rewardCycle.startTimestamp);
         uint256 investedTimeInCycle = averageTimeInCycle(cycleLength, userStakeInfo.averageInvestedTime);
-        uint256 stakedOrfiPortion = calculateStakeOrfiPortion(userStakeInfo.stakedOrfiAmount, rewardCycle.totalStakedOrfiAmount);
+        uint256 stakedChrfPortion = calculateStakeChrfPortion(userStakeInfo.stakedChrfAmount, rewardCycle.totalStakedChrfAmount);
 
-        return calculateRewards(investedTimeInCycle, stakedOrfiPortion, rewardCycle.totalAllocatedRewards);
+        return calculateRewards(investedTimeInCycle, stakedChrfPortion, rewardCycle.totalAllocatedRewards);
     }
 
-    function updateStakeOrfiBalance(address to_, uint256 amount, bool isStake) internal returns(uint256){
+    function updateStakeChrfBalance(address to_, uint256 amount, bool isStake) internal returns(uint256){
         updateBalanceBasedOnPreviousCycle(to_);
         UserStakeInfo memory userStakeInfo = _userStakeInfoToRewardCycleMapping[to_][currentRewardCycle];
         _userActivityMapping[to_] = currentRewardCycle;
@@ -406,11 +406,11 @@ contract RewardDistributor is Ownable {
             (
                 userStakeInfo.averageInvestedTime,
                 _rewardCycleMapping[currentRewardCycle].startTimestamp,
-                userStakeInfo.stakedOrfiAmount,
+                userStakeInfo.stakedChrfAmount,
                 amount
             );
             userStakeInfo.averageInvestedTime = uint32(tAVG.div(1e18));
-            userStakeInfo.stakedOrfiAmount = userStakeInfo.stakedOrfiAmount.add(amount);
+            userStakeInfo.stakedChrfAmount = userStakeInfo.stakedChrfAmount.add(amount);
             userStakeInfo.rewardCycle = currentRewardCycle;
             _userStakeInfoToRewardCycleMapping[to_][currentRewardCycle] = userStakeInfo;
 
@@ -418,9 +418,9 @@ contract RewardDistributor is Ownable {
             return tAVG;
         }
         else {
-            userStakeInfo.stakedOrfiAmount = userStakeInfo.stakedOrfiAmount.sub(amount);
+            userStakeInfo.stakedChrfAmount = userStakeInfo.stakedChrfAmount.sub(amount);
             _userStakeInfoToRewardCycleMapping[to_][currentRewardCycle] = userStakeInfo;
-            if(userStakeInfo.stakedOrfiAmount == 0){
+            if(userStakeInfo.stakedChrfAmount == 0){
                 delete _userStakeInfoToRewardCycleMapping[to_][currentRewardCycle];
             }
             emit UnstakeBalanceUpdated(to_, amount, userStakeInfo.averageInvestedTime);
@@ -435,7 +435,7 @@ contract RewardDistributor is Ownable {
                 UserStakeInfo memory newUserStakeInfo;
                 newUserStakeInfo.averageInvestedTime = 0;
                 newUserStakeInfo.rewardCycle = i;
-                newUserStakeInfo.stakedOrfiAmount = userStakeInfo.stakedOrfiAmount;
+                newUserStakeInfo.stakedChrfAmount = userStakeInfo.stakedChrfAmount;
                 newUserStakeInfo.redeemed = false;
                 _userStakeInfoToRewardCycleMapping[to_][i] = newUserStakeInfo;
             }
@@ -443,36 +443,36 @@ contract RewardDistributor is Ownable {
         }
     }
 
-    function calculateAverageTime(uint32 tAVG, uint32 rewardCycleStartTime, uint256 stakedOrfiAmount, uint256 amount) internal view returns(uint256){
-        uint256 stakeTimeValue = tAVG.mul(stakedOrfiAmount);
+    function calculateAverageTime(uint32 tAVG, uint32 rewardCycleStartTime, uint256 stakedChrfAmount, uint256 amount) internal view returns(uint256){
+        uint256 stakeTimeValue = tAVG.mul(stakedChrfAmount);
         uint256 stakingTime = block.timestamp.sub(rewardCycleStartTime);
         uint256 currentStakeTimeValue = amount.mul(stakingTime);
         uint256 totalStakeTimeValue = stakeTimeValue.add(currentStakeTimeValue);
-        return calculateAverageTime(totalStakeTimeValue, stakedOrfiAmount.add(amount));
+        return calculateAverageTime(totalStakeTimeValue, stakedChrfAmount.add(amount));
     }
 
     function averageTimeInCycle(uint256 cycleLength, uint256 averageInvestedTime) internal pure returns(uint256) {
         return (FixedPoint.fraction(cycleLength.sub(averageInvestedTime), cycleLength).decode112with18() / 1e15).mul(1e15);
     }
 
-    function calculateStakeOrfiPortion(uint256 stakeOrfiAmount, uint256 totalStakedOrfiAmount) internal pure returns(uint256) {
-        return (FixedPoint.fraction(stakeOrfiAmount, totalStakedOrfiAmount).decode112with18() / 1e15).mul(1e15);
+    function calculateStakeChrfPortion(uint256 stakeChrfAmount, uint256 totalStakedChrfAmount) internal pure returns(uint256) {
+        return (FixedPoint.fraction(stakeChrfAmount, totalStakedChrfAmount).decode112with18() / 1e15).mul(1e15);
     }
 
-    function calculateAverageTime(uint256 totalStakeTimeValue, uint256 totalStakedOrfiAmount) internal pure returns(uint256) {
-        return (FixedPoint.fraction(totalStakeTimeValue, totalStakedOrfiAmount).decode112with18() / 1e15).mul(1e15);
+    function calculateAverageTime(uint256 totalStakeTimeValue, uint256 totalStakedChrfAmount) internal pure returns(uint256) {
+        return (FixedPoint.fraction(totalStakeTimeValue, totalStakedChrfAmount).decode112with18() / 1e15).mul(1e15);
     }
 
-    function calculateRewards(uint256 investedTime, uint256 stakedOrfiPortion, uint256 totalRewards) internal pure returns(uint256) {
-        return (investedTime.mul(stakedOrfiPortion).mul(totalRewards)).div(1e36);
+    function calculateRewards(uint256 investedTime, uint256 stakedChrfPortion, uint256 totalRewards) internal pure returns(uint256) {
+        return (investedTime.mul(stakedChrfPortion).mul(totalRewards)).div(1e36);
     }
 
     function stakingContract() external view returns(address) {
         return _stakingContract;
     }
 
-    function stakedOrfiAddress() external view returns(address) {
-        return _stakedOrfiAddress;
+    function stakedChrfAddress() external view returns(address) {
+        return _stakedChrfAddress;
     }
 
     function getTotalRewardsForCycle(uint8 rewardCycleId) external view returns(uint256) {
@@ -493,12 +493,12 @@ contract RewardDistributor is Ownable {
         return totalRewards_;
     }
 
-    function getTotalStakedOrfiOfUserForACycle(address account_, uint8 rewardCycle) external view returns(uint256 amount_) {
-        amount_ = _userStakeInfoToRewardCycleMapping[account_][rewardCycle].stakedOrfiAmount;
+    function getTotalStakedChrfOfUserForACycle(address account_, uint8 rewardCycle) external view returns(uint256 amount_) {
+        amount_ = _userStakeInfoToRewardCycleMapping[account_][rewardCycle].stakedChrfAmount;
     }
 
-    function getTotalStakedOrfiForACycle(uint8 rewardCycle) external view returns(uint256 amount_) {
-        amount_ = _rewardCycleMapping[rewardCycle].totalStakedOrfiAmount;
+    function getTotalStakedChrfForACycle(uint8 rewardCycle) external view returns(uint256 amount_) {
+        amount_ = _rewardCycleMapping[rewardCycle].totalStakedChrfAmount;
     }
 
 }

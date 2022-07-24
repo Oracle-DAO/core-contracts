@@ -5,13 +5,13 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-contract MockORFI is ERC20 {
+contract MockCHRF is ERC20 {
 
     address public owner;
     address public nttContractAddress;
     using SafeMath for uint256;
 
-    constructor() ERC20('Oracle', 'ORFI') {
+    constructor() ERC20('Oracle', 'CHRF') {
         owner = msg.sender;
     }
 

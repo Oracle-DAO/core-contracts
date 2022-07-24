@@ -5,7 +5,7 @@ import { Contract } from "ethers";
 
 describe("Bond Test", function () {
   let mim: Contract,
-    orfi: Contract,
+    chrf: Contract,
     treasuryHelper: Contract,
     treasury: Contract,
     tavCalculator: Contract,
@@ -22,13 +22,13 @@ describe("Bond Test", function () {
     mim = await MIM.deploy();
     await mim.deployed();
 
-    const ORFI = await ethers.getContractFactory("ORFI");
-    orfi = await ORFI.deploy();
-    await orfi.deployed();
+    const CHRF = await ethers.getContractFactory("CHRF");
+    chrf = await CHRF.deploy();
+    await chrf.deployed();
 
     const TreasuryHelper = await ethers.getContractFactory("TreasuryHelper");
     treasuryHelper = await TreasuryHelper.deploy(
-      orfi.address,
+      chrf.address,
       mim.address,
       0
     );
@@ -42,20 +42,20 @@ describe("Bond Test", function () {
 
     const Treasury = await ethers.getContractFactory("Treasury");
     treasury = await Treasury.deploy(
-      orfi.address,
+      chrf.address,
       treasuryHelper.address
     );
     await treasury.deployed();
 
-    // Only treasury can mint ORFI.
-    await orfi.setVault(treasury.address);
+    // Only treasury can mint CHRF.
+    await chrf.setVault(treasury.address);
 
     // mint mim for msg.sender
     await mim.mint(deployer.address, "10000000000000000000000000");
 
     const TAVCalculator = await ethers.getContractFactory("TAVCalculator");
     tavCalculator = await TAVCalculator.deploy(
-      orfi.address,
+      chrf.address,
       treasury.address
     );
     await tavCalculator.deployed();
@@ -63,21 +63,21 @@ describe("Bond Test", function () {
     // approve large number for treasury, so that it can move
     await mim.approve(treasury.address, constants.largeApproval);
 
-    // approve treasury address for a user so that treasury can burn orfi for user
-    await orfi.approve(treasury.address, constants.largeApproval);
+    // approve treasury address for a user so that treasury can burn chrf for user
+    await chrf.approve(treasury.address, constants.largeApproval);
 
     await treasury.setTAVCalculator(tavCalculator.address);
 
-    // Deposit 1,000,000 MIM and mint 1,000,000 ORFI
+    // Deposit 1,000,000 MIM and mint 1,000,000 CHRF
     await treasury.deposit(
       "1000000000000000000000000", // reserve token amount to deposit
       mim.address,
-      "1000000000000000000000000" // amount of orfi to mint
+      "1000000000000000000000000" // amount of chrf to mint
     );
 
     const Bond = await ethers.getContractFactory("Bond");
     bond = await Bond.deploy(
-      orfi.address,
+      chrf.address,
       mim.address,
       treasury.address,
       DAO.address
@@ -112,12 +112,12 @@ describe("Bond Test", function () {
 
   });
   it("Bond Deposit", async function () {
-    let orfiBalance, orfiBalance1;
+    let chrfBalance, chrfBalance1;
     await bond.deposit("1000000000", "600000");
   });
 
   it("Bond Redeem", async function () {
-    let orfiBalance, orfiBalance1;
+    let chrfBalance, chrfBalance1;
     await bond.redeem(deployer.address, false);
   });
 

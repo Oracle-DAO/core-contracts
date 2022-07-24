@@ -171,7 +171,7 @@ interface IERC20 {
     event Approval(address indexed owner, address indexed spender, uint256 value);
 }
 
-interface IORFI {
+interface ICHRF {
     function burnFrom(address account_, uint256 amount_) external;
 
     function mint(address account_, uint256 amount_) external;
@@ -217,8 +217,8 @@ contract Treasury is Ownable {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
-    event Deposit(address indexed token, uint256 amount, uint256 orfiMinted);
-    event Withdrawal(address indexed token, uint256 amount, uint256 orfiBurned);
+    event Deposit(address indexed token, uint256 amount, uint256 chrfMinted);
+    event Withdrawal(address indexed token, uint256 amount, uint256 chrfBurned);
     event CreateDebt(
         address indexed debtor,
         address indexed token,
@@ -235,8 +235,8 @@ contract Treasury is Ownable {
 
     event ReservesUpdated(uint256 indexed totalReserves);
 
-    address public immutable ORFI;
-    address public sORFI;
+    address public immutable CHRF;
+    address public sCHRF;
     address public tavCalculator;
     address public treasuryHelper;
     address public auditOwner;
@@ -246,19 +246,19 @@ contract Treasury is Ownable {
     mapping(address => uint256) public debtorBalance;
 
     uint256 private _totalReserves; // Risk-free value of all assets
-    uint256 private _totalORFIMinted; // total orfi minted
+    uint256 private _totalCHRFMinted; // total chrf minted
     uint256 private _totalDebt;
 
-    constructor(address _ORFI, address _treasuryHelper) {
-        require(_ORFI != address(0));
-        ORFI = _ORFI;
+    constructor(address _CHRF, address _treasuryHelper) {
+        require(_CHRF != address(0));
+        CHRF = _CHRF;
         require(_treasuryHelper != address(0));
         treasuryHelper = _treasuryHelper;
     }
 
-    function setStakedORFI(address _sORFI) external onlyOwner {
-        require(_sORFI != address(0));
-        sORFI = _sORFI;
+    function setStakedCHRF(address _sCHRF) external onlyOwner {
+        require(_sCHRF != address(0));
+        sCHRF = _sCHRF;
     }
 
     function setTAVCalculator(address _tavCalculator) external onlyOwner {
@@ -274,15 +274,15 @@ contract Treasury is Ownable {
     }
 
     /**
-    @notice allow approved address to deposit an asset for ORFI
+    @notice allow approved address to deposit an asset for CHRF
         @param _amount uint
         @param _token address
-        @param _orfiAmount uint
+        @param _chrfAmount uint
      */
     function deposit(
         uint256 _amount,
         address _token,
-        uint256 _orfiAmount
+        uint256 _chrfAmount
     ) external {
         bool isReserveToken = ITreasuryHelper(treasuryHelper).isReserveToken(_token);
         bool isLiquidityToken = ITreasuryHelper(treasuryHelper).isLiquidityToken(_token);
@@ -296,17 +296,17 @@ contract Treasury is Ownable {
         }
         uint256 value = valueOfToken(_token, _amount, isReserveToken, isLiquidityToken);
         _totalReserves = _totalReserves.add(value);
-        _totalORFIMinted = _totalORFIMinted.add(_orfiAmount);
+        _totalCHRFMinted = _totalCHRFMinted.add(_chrfAmount);
 
         IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
-        IORFI(ORFI).mint(msg.sender, _orfiAmount);
+        ICHRF(CHRF).mint(msg.sender, _chrfAmount);
 
         emit ReservesUpdated(_totalReserves);
-        emit Deposit(_token, _amount, _orfiAmount);
+        emit Deposit(_token, _amount, _chrfAmount);
     }
 
     /**
-    @notice allow approved address to burn ORFI for reserves
+    @notice allow approved address to burn CHRF for reserves
         @param _amount uint
         @param _token address
      */
@@ -316,15 +316,15 @@ contract Treasury is Ownable {
         require(ITreasuryHelper(treasuryHelper).isReserveSpender(msg.sender), 'NApproved');
 
         uint256 value = valueOfToken(_token, _amount, true, false);
-        uint256 orfiToBurn = orfiEqValue(value);
+        uint256 chrfToBurn = chrfEqValue(value);
 
-        _totalORFIMinted = _totalORFIMinted.sub(orfiToBurn);
+        _totalCHRFMinted = _totalCHRFMinted.sub(chrfToBurn);
         _totalReserves = _totalReserves.sub(value);
         emit ReservesUpdated(_totalReserves);
 
-        IORFI(ORFI).burnFrom(msg.sender, orfiToBurn);
+        ICHRF(CHRF).burnFrom(msg.sender, chrfToBurn);
         IERC20(_token).safeTransfer(msg.sender, _amount);
-        emit Withdrawal(_token, _amount, orfiToBurn);
+        emit Withdrawal(_token, _amount, chrfToBurn);
     }
 
     /**
@@ -351,7 +351,7 @@ contract Treasury is Ownable {
     }
 
     /**
-    @notice returns ORFI valuation of asset
+    @notice returns CHRF valuation of asset
         @param _token address
         @param _amount uint
         @return value_ uint
@@ -359,8 +359,8 @@ contract Treasury is Ownable {
     function valueOfToken(address _token, uint256 _amount, bool isReserveToken, bool isLiquidToken) public
     view returns (uint256) {
         if (isReserveToken) {
-            // convert amount to match ORFI decimals
-            return _amount.mul(10**IERC20(ORFI).decimals()).div(10**IERC20(_token).decimals());
+            // convert amount to match CHRF decimals
+            return _amount.mul(10**IERC20(CHRF).decimals()).div(10**IERC20(_token).decimals());
         } else if (isLiquidToken) {
             return IBondCalculator(bondCalculator[_token]).valuation(_token, _amount);
         }
@@ -368,10 +368,10 @@ contract Treasury is Ownable {
     }
 
     /**
-    * @notice Returns stable coins amount valuation in ORFI
+    * @notice Returns stable coins amount valuation in CHRF
      * @param _amount uint
      */
-    function orfiEqValue(uint256 _amount)
+    function chrfEqValue(uint256 _amount)
     public
     view
     returns (uint256 value_)
@@ -384,7 +384,7 @@ contract Treasury is Ownable {
         return _totalReserves;
     }
 
-    function totalORFIMinted() external view returns(uint256) {
-        return _totalORFIMinted;
+    function totalCHRFMinted() external view returns(uint256) {
+        return _totalCHRFMinted;
     }
 }

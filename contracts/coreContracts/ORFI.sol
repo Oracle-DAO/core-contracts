@@ -143,7 +143,7 @@ interface ISwapPair{
     function token1() external view returns (address);
 }
 
-contract ORFI is Context, IERC20, IERC20Metadata, VaultOwned {
+contract CHRF is Context, IERC20, IERC20Metadata, VaultOwned {
     using SafeMath for uint256;
     mapping(address => uint256) private _balances;
 
@@ -161,7 +161,7 @@ contract ORFI is Context, IERC20, IERC20Metadata, VaultOwned {
 
     constructor() {
         _name = "Oracle";
-        _symbol = "ORFI";
+        _symbol = "CHRF";
 
         baseSellTax = 18;
         multiplier = 5;

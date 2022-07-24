@@ -4,8 +4,8 @@ import { ethers } from "hardhat";
 import { constants } from "../scripts/constants";
 import { Contract } from "ethers";
 describe("Reward Distributor", async () => {
-  let mockOrfi: Contract,
-    mockStakedOrfi: Contract,
+  let mockChrf: Contract,
+    mockStakedChrf: Contract,
     mockStaking: any,
     rewardDistributor: Contract,
     deployer: any,
@@ -21,26 +21,26 @@ describe("Reward Distributor", async () => {
   before(async () => {
     [deployer, user1, user2] = await ethers.getSigners();
 
-    const mockOrfiFact = await ethers.getContractFactory("MockORFI");
-    mockOrfi = await mockOrfiFact.deploy();
+    const mockChrfFact = await ethers.getContractFactory("MockCHRF");
+    mockChrf = await mockChrfFact.deploy();
 
-    await mockOrfi.deployed();
+    await mockChrf.deployed();
 
-    const mockStakedORFIFact = await ethers.getContractFactory(
-      "MockStakedORFI"
+    const mockStakedCHRFFact = await ethers.getContractFactory(
+      "MockStakedCHRF"
     );
-    mockStakedOrfi = await mockStakedORFIFact.deploy();
+    mockStakedChrf = await mockStakedCHRFFact.deploy();
 
     const mockMimFact = await ethers.getContractFactory("MIM");
     mim = await mockMimFact.deploy();
     await mim.deployed();
 
-    await mockStakedOrfi.deployed();
+    await mockStakedChrf.deployed();
 
     const mockStakingFact = await ethers.getContractFactory("MockStaking");
     mockStaking = await mockStakingFact.deploy(
-      mockOrfi.address,
-      mockStakedOrfi.address
+      mockChrf.address,
+      mockStakedChrf.address
     );
 
     await mockStaking.deployed();
@@ -50,18 +50,18 @@ describe("Reward Distributor", async () => {
     );
     rewardDistributor = await rewardDistributorFact.deploy(
       mockStaking.address,
-      mockStakedOrfi.address
+      mockStakedChrf.address
     );
 
     await rewardDistributor.deployed();
 
-    await mockStakedOrfi.mint(deployer.address, constants.initialMint);
+    await mockStakedChrf.mint(deployer.address, constants.initialMint);
 
     const treasuryHelperFact = await ethers.getContractFactory(
       "TreasuryHelper"
     );
     treasuryHelper = await treasuryHelperFact.deploy(
-      mockOrfi.address,
+      mockChrf.address,
       mim.address,
       0
     );
@@ -69,7 +69,7 @@ describe("Reward Distributor", async () => {
 
     const treasuryFact = await ethers.getContractFactory("Treasury");
     treasury = await treasuryFact.deploy(
-      mockOrfi.address,
+      mockChrf.address,
       treasuryHelper.address
     );
     await treasury.deployed();
@@ -87,13 +87,13 @@ describe("Reward Distributor", async () => {
     await mim.mint(treasury.address, constants.largeApproval);
   });
 
-  it("Check staking and stakedOrfi Address", async function () {
+  it("Check staking and stakedChrf Address", async function () {
     expect(await rewardDistributor.stakingContract()).to.equal(
       mockStaking.address
     );
 
-    expect(await rewardDistributor.stakedOrfiAddress()).to.equal(
-      mockStakedOrfi.address
+    expect(await rewardDistributor.stakedChrfAddress()).to.equal(
+      mockStakedChrf.address
     );
   });
 
@@ -103,18 +103,18 @@ describe("Reward Distributor", async () => {
       rewardDistributor.address
     );
 
-    await mockOrfi.mint(deployer.address, constants.largeApproval);
-    await mockOrfi.approve(mockStaking.address, constants.largeApproval);
+    await mockChrf.mint(deployer.address, constants.largeApproval);
+    await mockChrf.approve(mockStaking.address, constants.largeApproval);
 
     await mockStaking.stake(deployer.address, "400000000000000000000000");
 
     await mockStaking.stake(deployer.address, "800000000000000000000000");
 
-    console.log(await rewardDistributor.getTotalStakedOrfiOfUserForACycle(deployer.address, 1));
+    console.log(await rewardDistributor.getTotalStakedChrfOfUserForACycle(deployer.address, 1));
 
     await mockStaking.unstake(deployer.address, "500000000000000000000000");
 
-    console.log(await rewardDistributor.getTotalStakedOrfiOfUserForACycle(deployer.address, 1));
+    console.log(await rewardDistributor.getTotalStakedChrfOfUserForACycle(deployer.address, 1));
     // await rewardDistributor.completeRewardCycle(constants.initialMint);
   });
   //
@@ -126,8 +126,8 @@ describe("Reward Distributor", async () => {
   //     rewardDistributor.address
   //   );
   //
-  //   await mockOrfi.mint(user1.address, constants.largeApproval);
-  //   await mockOrfi
+  //   await mockChrf.mint(user1.address, constants.largeApproval);
+  //   await mockChrf
   //     .connect(user1)
   //     .approve(mockStaking.address, constants.largeApproval);
   //
@@ -169,7 +169,7 @@ describe("Reward Distributor", async () => {
   //   expect(await rewardDistributor.currentRewardCycle()).to.equal(4);
   //   await mockStaking.unstake(deployer.address, "400000000000000000000000");
   //   expect(
-  //     await rewardDistributor.getTotalStakedOrfiOfUserForACycle(deployer.address, 2)
+  //     await rewardDistributor.getTotalStakedChrfOfUserForACycle(deployer.address, 2)
   //   ).to.gt(0);
   //   await rewardDistributor.completeRewardCycle(rewardAmount);
   //   // console.log(await rewardDistributor.rewardsForACycle(deployer.address, 1));
@@ -177,12 +177,12 @@ describe("Reward Distributor", async () => {
   //   // console.log(await rewardDistributor.rewardsForACycle(deployer.address, 3));
   //   // console.log(await rewardDistributor.rewardsForACycle(deployer.address, 4));
   //   //
-  //   // console.log(await rewardDistributor.getTotalStakedOrfiOfUserForACycle(deployer.address, 1));
-  //   // console.log(await rewardDistributor.getTotalStakedOrfiOfUserForACycle(deployer.address, 2));
-  //   // console.log(await rewardDistributor.getTotalStakedOrfiOfUserForACycle(deployer.address, 3));
-  //   // console.log(await rewardDistributor.getTotalStakedOrfiOfUserForACycle(deployer.address, 4));
+  //   // console.log(await rewardDistributor.getTotalStakedChrfOfUserForACycle(deployer.address, 1));
+  //   // console.log(await rewardDistributor.getTotalStakedChrfOfUserForACycle(deployer.address, 2));
+  //   // console.log(await rewardDistributor.getTotalStakedChrfOfUserForACycle(deployer.address, 3));
+  //   // console.log(await rewardDistributor.getTotalStakedChrfOfUserForACycle(deployer.address, 4));
   //
-  //   // console.log(await rewardDistributor.getTotalStakedOrfiForACycle(4));
+  //   // console.log(await rewardDistributor.getTotalStakedChrfForACycle(4));
   //
   // });
 });

@@ -3,7 +3,7 @@ import { ethers } from "hardhat";
 import { readContractAddress } from "../../helpers";
 import { constants } from "../../constants";
 
-const orfiAdd = readContractAddress("/ORFI.json");
+const chrfAdd = readContractAddress("/CHRF.json");
 const treasuryAdd = readContractAddress("/Treasury.json");
 const lpManagerAdd = readContractAddress("/LpManager.json");
 const lpAssetAdd = readContractAddress("/LpAsset.json");

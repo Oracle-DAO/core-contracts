@@ -23,8 +23,8 @@ async function main() {
   );
 
   // bond depository address will go here
-  await treasuryHelper.queue("0", mimBond.address);
-  console.log("step 11");
+  // await treasuryHelper.queue("0", mimBond.address);
+  // console.log("step 11");
 
   // bond depository address will go here
   await treasuryHelper.toggle("0", mimBond.address, constants.zeroAddress);
@@ -38,7 +38,7 @@ async function main() {
   await treasuryHelper.toggle("0", deployer.address, constants.zeroAddress);
   console.log("step 14");
 
-  // // reserve spender address will go here. They will burn ORFI. Only for testing
+  // // reserve spender address will go here. They will burn CHRF. Only for testing
   // await treasuryHelper.queue("1", deployer.address);
   // console.log("step 15");
   //
@@ -47,24 +47,24 @@ async function main() {
   // console.log("step 16");
   //
   // // reserve manager address will go here. They will allocate money using manage function in treasury. Gnosis will go here
-  // await treasuryHelper.queue("3", deployer.address);
-  // console.log("step 17");
+  await treasuryHelper.queue("3", deployer.address);
+  console.log("step 17");
 
   // reserve manager address will go here. They will allocate money
-  // await treasuryHelper.toggle("3", deployer.address, constants.zeroAddress);
-  // console.log("step 18");
+  await treasuryHelper.toggle("3", deployer.address, constants.zeroAddress);
+  console.log("step 18");
 
   // reserve manager address will go here. They will allocate money
-  // await treasuryHelper.queue("3", rewardDistributor.address);
-  // console.log("step 19");
-  //
-  // // reserve manager address will go here. They will allocate money
-  // await treasuryHelper.toggle(
-  //   "3",
-  //   rewardDistributor.address,
-  //   constants.zeroAddress
-  // );
-  // console.log("step 20");
+  await treasuryHelper.queue("3", rewardDistributor.address);
+  console.log("step 19");
+
+  // reserve manager address will go here. They will allocate money
+  await treasuryHelper.toggle(
+    "3",
+    rewardDistributor.address,
+    constants.zeroAddress
+  );
+  console.log("step 20");
 }
 
 main().catch((error) => {

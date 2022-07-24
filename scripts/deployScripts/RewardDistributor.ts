@@ -3,7 +3,7 @@ import { ethers } from "hardhat";
 import { readContractAddress, saveFrontendFiles } from "../helpers";
 
 async function main() {
-  const sORFIAddress = readContractAddress("/StakedORFI.json");
+  const sCHRFAddress = readContractAddress("/StakedCHRF.json");
   const stakingAdd = readContractAddress("/Staking.json");
 
   const RewardDistributorFact = await ethers.getContractFactory(
@@ -11,7 +11,7 @@ async function main() {
   );
   const rewardDistributor = await RewardDistributorFact.deploy(
     stakingAdd,
-    sORFIAddress
+    sCHRFAddress
   );
   await rewardDistributor.deployed();
 

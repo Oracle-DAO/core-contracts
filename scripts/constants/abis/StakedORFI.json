@@ -1,7 +1,7 @@
 {
   "_format": "hh-sol-artifact-1",
-  "contractName": "StakedORFI",
-  "sourceName": "contracts/coreContracts/StakedORFI.sol",
+  "contractName": "StakedCHRF",
+  "sourceName": "contracts/coreContracts/StakedCHRF.sol",
   "abi": [
     {
       "inputs": [],
